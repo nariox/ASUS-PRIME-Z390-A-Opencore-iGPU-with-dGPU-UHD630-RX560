@@ -9,15 +9,21 @@
 - Lan: Intel® I219V, 1 x Gigabit LAN Controller
 - WiFi/Bluetooth: BCM94360CS2
 - Audio: Realtek® ALC S1220A 8-Channel High Definition Audio
-- Case: Fractal Design R5 Blackout
-
-
 
 ## Comments
 This Hackintosh build guide is NOT GUARANTEED 100% fully working in your conditions. This guide has been tested on MacOS Mojave 10.14.6 on an AMD dGPU.
 
+As far as I have been able to test, everything works well except Thunderbolt devices stop working after suspend (but work on boot, tested with Thunderbolt Display and TB3->TB1 adapter).
+
 Special Thanks to dhckdgjs (initial repository owner), CaseySJ(at tonymacx86.com) and Newlife(at x86.co.kr).
 
+## Not tested
+- FileVault
+- Catalina (MacOS 10.15)
+
+## Not working
+- NVRAM (still figuring this out)
+- After suspend, Thunderbolt stops working.
 
 ## Procedure
 1. Edit config.plist to have your own SmUUID and Serial Number
@@ -25,11 +31,9 @@ Special Thanks to dhckdgjs (initial repository owner), CaseySJ(at tonymacx86.com
 3. Install MacOS 10.14.6
 4. Done?
 
-## Summary
-As far as I have been able to test, everything works well except Thunderbolt devices stop working after suspend (but work on boot, tested with Thunderbolt Display and TB3->TB1 adapter).
+## Misc
 
-I haven't tested it on Catalina yet, but have applied as many of the suggestions I've seen out there (Reddit, InsanelyMac, etc).
-If you need other detailed settings fot this ASUS PRIME Z390-A M/B, please check released file.(like as USBport)
+If you need other detailed settings fot this ASUS PRIME Z390-A M/B, please check release file.(like as USBport)
 Thanks.
 
 ## Screenshots
