@@ -22,7 +22,6 @@ Special Thanks to dhckdgjs (initial repository owner), CaseySJ(at tonymacx86.com
 - Catalina (MacOS 10.15)
 
 ## Not working
-- NVRAM (still figuring this out)
 - After suspend, Thunderbolt stops working.
 
 ## Procedure
