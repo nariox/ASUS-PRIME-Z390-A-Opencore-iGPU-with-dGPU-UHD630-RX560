@@ -24,14 +24,6 @@
 			</dict>
 			<dict>
 				<key>Comment</key>
-				<string>Fix USB power</string>
-				<key>Enabled</key>
-				<false/>
-				<key>Path</key>
-				<string>SSDT-EC-USBX.aml</string>
-			</dict>
-			<dict>
-				<key>Comment</key>
 				<string>Allows for native CPU power management</string>
 				<key>Enabled</key>
 				<true/>
@@ -66,12 +58,6 @@
 				<key>Enabled</key>
 				<true/>
 				<key>Path</key>
-				<string>SSDT-H_EC-USBX.aml</string>
-			</dict>
-			<dict>
-				<key>Enabled</key>
-				<true/>
-				<key>Path</key>
 				<string>SSDT-EC.aml</string>
 			</dict>
 			<dict>
@@ -85,6 +71,12 @@
 				<true/>
 				<key>Path</key>
 				<string>SSDT-DTPG.aml</string>
+			</dict>
+			<dict>
+				<key>Enabled</key>
+				<true/>
+				<key>Path</key>
+				<string>SSDT-PNLF.aml</string>
 			</dict>
 		</array>
 		<key>Block</key>
@@ -190,6 +182,102 @@
 				<key>TableLength</key>
 				<integer>0</integer>
 			</dict>
+			<dict>
+				<key>Comment</key>
+				<string>HPET _CRS to XCRS Rename</string>
+				<key>Count</key>
+				<integer>0</integer>
+				<key>Enabled</key>
+				<true/>
+				<key>Find</key>
+				<data>
+				X0NSUwigGQ==
+				</data>
+				<key>Limit</key>
+				<integer>0</integer>
+				<key>Mask</key>
+				<data>
+				</data>
+				<key>OemTableId</key>
+				<data>
+				AAAAAA==
+				</data>
+				<key>Replace</key>
+				<data>
+				WENSUwigGQ==
+				</data>
+				<key>ReplaceMask</key>
+				<data>
+				</data>
+				<key>Skip</key>
+				<integer>0</integer>
+				<key>TableLength</key>
+				<integer>0</integer>
+			</dict>
+			<dict>
+				<key>Comment</key>
+				<string>RTC IRQ 8 Patch</string>
+				<key>Count</key>
+				<integer>0</integer>
+				<key>Enabled</key>
+				<true/>
+				<key>Find</key>
+				<data>
+				IgABeQA=
+				</data>
+				<key>Limit</key>
+				<integer>0</integer>
+				<key>Mask</key>
+				<data>
+				</data>
+				<key>OemTableId</key>
+				<data>
+				AAAAAA==
+				</data>
+				<key>Replace</key>
+				<data>
+				IgAAeQA=
+				</data>
+				<key>ReplaceMask</key>
+				<data>
+				</data>
+				<key>Skip</key>
+				<integer>0</integer>
+				<key>TableLength</key>
+				<integer>0</integer>
+			</dict>
+			<dict>
+				<key>Comment</key>
+				<string>TIMR IRQ 0 Patch</string>
+				<key>Count</key>
+				<integer>0</integer>
+				<key>Enabled</key>
+				<true/>
+				<key>Find</key>
+				<data>
+				IgEAeQA=
+				</data>
+				<key>Limit</key>
+				<integer>0</integer>
+				<key>Mask</key>
+				<data>
+				</data>
+				<key>OemTableId</key>
+				<data>
+				AAAAAA==
+				</data>
+				<key>Replace</key>
+				<data>
+				IgAAeQA=
+				</data>
+				<key>ReplaceMask</key>
+				<data>
+				</data>
+				<key>Skip</key>
+				<integer>0</integer>
+				<key>TableLength</key>
+				<integer>0</integer>
+			</dict>
 		</array>
 		<key>Quirks</key>
 		<dict>
@@ -242,119 +330,71 @@
 			<key>PciRoot(0x0)/Pci(0x1,0x0)/Pci(0x0,0x0)</key>
 			<dict>
 				<key>AAPL,slot-name</key>
-				<data>
-				U2xvdC0x
-				</data>
+				<string>Slot-1</string>
 				<key>device_type</key>
-				<data>
-				RGlzcGxheSBDb250cm9sbGVy
-				</data>
+				<string>Display Controll\00\00er</string>
 				<key>model</key>
-				<data>
-				QU1EIFJhZGVvbiBSWCA1ODA=
-				</data>
+				<string>AMD Radeon RX 560</string>
 			</dict>
 			<key>PciRoot(0x0)/Pci(0x14,0x0)</key>
 			<dict>
 				<key>AAPL,slot-name</key>
-				<data>
-				SW50ZXJuYWw=
-				</data>
+				<string>Internal</string>
 				<key>device_type</key>
-				<data>
-				VVNCIGNvbnRyb2xsZXI=
-				</data>
+				<string>USB controller</string>
 				<key>model</key>
-				<data>
-				QVNVUyBQUklNRSBaMzkwLUEgVVNCIDMuMSB4SENJIEhv
-				c3QgQ29udHJvbGxlcg==
-				</data>
+				<string>ASUS PRIME Z390-A USB 3.1 xHCI Host Controller</string>
 			</dict>
 			<key>PciRoot(0x0)/Pci(0x16,0x0)</key>
 			<dict>
 				<key>AAPL,slot-name</key>
-				<data>
-				SW50ZXJuYWw=
-				</data>
+				<string>Internal</string>
 				<key>device_type</key>
-				<data>
-				Q29tbXVuaWNhdGlvbiBjb250cm9sbGVy
-				</data>
+				<string>Communication controller</string>
 				<key>model</key>
-				<data>
-				QVNVUyBQUklNRSBaMzkwLUEgUENIIEhFQ0kgQ29udHJv
-				bGxlcg==
-				</data>
+				<string>ASUS PRIME Z390-A PCH HECI Controller</string>
 			</dict>
 			<key>PciRoot(0x0)/Pci(0x17,0x0)</key>
 			<dict>
 				<key>AAPL,slot-name</key>
-				<data>
-				SW50ZXJuYWw=
-				</data>
+				<string>Internal</string>
 				<key>device_type</key>
-				<data>
-				U0FUQSBjb250cm9sbGVy
-				</data>
+				<string>SATA controller</string>
 				<key>model</key>
-				<data>
-				QVNVUyBQUklNRSBaMzkwLUEgUENIIFNBVEEgQUhDSSBD
-				b250cm9sbGVy
-				</data>
+				<string>ASUS PRIME Z390-A PCH SATA AHCI Controller</string>
 			</dict>
 			<key>PciRoot(0x0)/Pci(0x1c,0x5)/Pci(0x0,0x0)</key>
 			<dict>
 				<key>AAPL,slot-name</key>
-				<data>
-				U2xvdC00
-				</data>
+				<string>Slot-4</string>
 				<key>device_type</key>
-				<data>
-				QWlyUG9ydCBFeHRyZW1l
-				</data>
+				<string>AirPort Extreme</string>
 				<key>model</key>
-				<data>
-				QnJvYWRjb20gOTQzNjBDUzIgV2lGaSAvIEJU
-				</data>
+				<string>Broadcom 94360CS\00\00\00\002 WiFi </string>
 			</dict>
 			<key>PciRoot(0x0)/Pci(0x1f,0x3)</key>
 			<dict>
 				<key>AAPL,slot-name</key>
-				<data>
-				SW50ZXJuYWw=
-				</data>
+				<string>Internal</string>
 				<key>device_type</key>
-				<data>
-				QXVkaW8gQ29udHJvbGxlcg==
-				</data>
+				<string>Audio Controller</string>
 				<key>hda-gfx</key>
-				<data>
-				b25ib2FyZC0y
-				</data>
+				<string>onboard-2</string>
 				<key>layout-id</key>
 				<data>
 				AQAAAA==
 				</data>
 				<key>model</key>
-				<data>
-				UmVhbHRlayBBTEMgUzEyMjBB
-				</data>
+				<string>Realtek ALC S122\00\00</string>
 			</dict>
 			<key>PciRoot(0x0)/Pci(0x1f,0x6)</key>
 			<dict>
 				<key>AAPL,slot-name</key>
-				<data>
-				SW50ZXJuYWw=
-				</data>
+				<string>Internal</string>
 				<key>device_type</key>
-				<data>
-				RXRoZXJuZXQ=
-				</data>
+				<string>Ethernet</string>
 				<key>model</key>
-				<data>
-				SW50ZWwgSTIxOXY3IEdpZ2FiaXQgRXRoZXJuZXQgKEVU
-				SDAp
-				</data>
+				<string>Intel I219v7 Gigabit Ethernet (ETH0)</string>
 			</dict>
 			<key>PciRoot(0x0)/Pci(0x2,0x0)</key>
 			<dict>
@@ -363,17 +403,15 @@
 				AwCRPg==
 				</data>
 				<key>AAPL,slot-name</key>
-				<data>
-				SW50ZXJuYWw=
-				</data>
+				<string>Internal</string>
+				<key>No-hda-gfx</key>
+				<string>onboard-2</string>
 				<key>device-id</key>
 				<data>
 				kT4AAA==
 				</data>
 				<key>device_type</key>
-				<data>
-				RGlzcGxheSBjb250cm9sbGVy
-				</data>
+				<string>Display controller</string>
 				<key>framebuffer-camellia</key>
 				<data>
 				AAAAAA==
@@ -509,10 +547,6 @@
 				<key>framebuffer-unifiedmem</key>
 				<data>
 				AAAAgA==
-				</data>
-				<key>hda-gfx</key>
-				<data>
-				b25ib2FyZC0y
 				</data>
 			</dict>
 		</dict>
@@ -908,7 +942,7 @@
 			<key>PanicNoKextDump</key>
 			<false/>
 			<key>PowerTimeoutKernelPanic</key>
-			<false/>
+			<true/>
 			<key>ThirdPartyTrim</key>
 			<false/>
 			<key>XhciPortLimit</key>
@@ -1009,6 +1043,14 @@
 				<key>Path</key>
 				<string>VerifyMsrE2.efi</string>
 			</dict>
+			<dict>
+				<key>Enabled</key>
+				<true/>
+				<key>Name</key>
+				<string>Boot Dmesg</string>
+				<key>Path</key>
+				<string>bdmesg.efi</string>
+			</dict>
 		</array>
 	</dict>
 	<key>NVRAM</key>
@@ -1032,11 +1074,19 @@
 				</data>
 				<key>nvda_drv</key>
 				<data>
-				MQ==
 				</data>
 				<key>prev-lang:kbd</key>
+				<string>en-US:0</string>
+			</dict>
+			<key>8BE4DF61-93CA-11D2-AA0D-00E098032B8C</key>
+			<dict>
+				<key>BootCurrent</key>
 				<data>
-				cnUtUlU6MjUy
+				ALAA
+				</data>
+				<key>BootOrder</key>
+				<data>
+				ALAAAACgAMAAcACAAA==
 				</data>
 			</dict>
 		</dict>
@@ -1253,10 +1303,10 @@
 			<true/>
 			<key>IgnoreTextInGraphics</key>
 			<true/>
-			<key>ProvideConsoleControl</key>
-			<false/>
 			<key>ProvideConsoleGop</key>
 			<true/>
+			<key>ReconnectOnResChange</key>
+			<false/>
 			<key>ReleaseUsbOwnership</key>
 			<false/>
 			<key>ReplaceTabWithSpace</key>
