@@ -23,8 +23,9 @@ Special Thanks to dhckdgjs (initial repository owner), CaseySJ(at tonymacx86.com
 - FileVault.
 
 ## Not working
-- After sleep, Thunderbolt stops working
--- Tested on Thunderbolt display: after sleep peripherals stop working (camera, audio, microphone, usb ports), but display itself still works.
+- Sleep can be buggy sometimes
+- After sleep, Thunderbolt USB devices stop working(?)
+-- Tested on Thunderbolt display: after sleep peripherals stop working (camera, audio, microphone, usb ports), but display itself still works (you can fix it by unplugging the thunderbolt display from the outlet and waiting a few seconds before replugging it, I think this forces MacOS to repopulate those devices).
 
 ## Procedure
 1. Edit config.plist to have your own SmUUID and Serial Number
