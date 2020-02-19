@@ -11,7 +11,7 @@
 - Audio: Realtek® ALC S1220A 8-Channel High Definition Audio
 
 ## Comments
-This Hackintosh build guide is NOT GUARANTEED 100% fully working in your conditions. This guide has been tested on MacOS Mojave 10.14.4-6 and 10.15.0-1 on an AMD dGPU.
+This Hackintosh build guide is NOT GUARANTEED 100% fully working in your conditions. This guide has been tested on MacOS Mojave 10.14.4-6 and 10.15.0-3 on an AMD dGPU.
 
 As far as I have been able to test, everything works well except Thunderbolt devices stop working after sleep (but work on boot, tested with Thunderbolt Display and TB3->TB1 adapter).
 
