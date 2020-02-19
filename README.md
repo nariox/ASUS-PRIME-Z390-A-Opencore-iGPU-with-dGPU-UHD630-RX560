@@ -13,18 +13,18 @@
 ## Comments
 This Hackintosh build guide is NOT GUARANTEED 100% fully working in your conditions. This guide has been tested on MacOS Mojave 10.14.4-6 and 10.15.0-1 on an AMD dGPU.
 
-As far as I have been able to test, everything works well except Thunderbolt devices stop working after suspend (but work on boot, tested with Thunderbolt Display and TB3->TB1 adapter).
+As far as I have been able to test, everything works well except Thunderbolt devices stop working after sleep (but work on boot, tested with Thunderbolt Display and TB3->TB1 adapter).
+
+Some ports in the back were disabled to keep ports within the 15 port limit.
 
 Special Thanks to dhckdgjs (initial repository owner), CaseySJ(at tonymacx86.com) and Newlife(at x86.co.kr).
 
 ## Not tested
 - FileVault.
 
-## Buggy
-- USB sometimes stops working after sleep.
-
 ## Not working
-- After sleep, Thunderbolt stops working.
+- After sleep, Thunderbolt stops working
+-- Tested on Thunderbolt display: after sleep peripherals stop working (camera, audio, microphone, usb ports), but display itself still works.
 
 ## Procedure
 1. Edit config.plist to have your own SmUUID and Serial Number
