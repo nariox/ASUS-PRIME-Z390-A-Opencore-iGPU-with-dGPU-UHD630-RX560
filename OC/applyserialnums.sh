@@ -9,5 +9,7 @@ while read line; do
     fi
 done < LocalSettings.txt
 
-sed -i "s/YourSystemSerialNumber/$SystemSerialNumber/g" config.plist
-sed -i "s/YourSystemUUID/$SystemUUID/g" config.plist
+cp config.plist config.plist.bak
+
+sed -i'.original'  "s/YourSystemSerialNumber/$SystemSerialNumber/g" config.plist
+sed -i'.original2' "s/YourSystemUUID/$SystemUUID/g" config.plist
