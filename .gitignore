@@ -9,3 +9,6 @@ OC/config.plist
 ._config.plist
 vault.plist
 vault.sig
+
+.*
+!/.gitignore
