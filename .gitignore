@@ -1,2 +1,9 @@
 LocalSettings.txt
 .DS_Store
+._.DS_Store
+/APPLE/
+/Microsoft/
+._LocalSettings.txt
+._applyserialnums.sh
+._config.plist
+
