@@ -3,7 +3,9 @@ LocalSettings.txt
 ._.DS_Store
 /APPLE/
 /Microsoft/
+OC/config.plist
 ._LocalSettings.txt
 ._applyserialnums.sh
 ._config.plist
-
+vault.plist
+vault.sig
