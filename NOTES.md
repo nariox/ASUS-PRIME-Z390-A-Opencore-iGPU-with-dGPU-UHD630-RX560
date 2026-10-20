@@ -25,12 +25,20 @@ Working notes for this machine (not part of the guide itself).
 - [ ] **OpenCore 1.0.7 → 1.0.8** (decided to postpone; do soon).
 - [ ] Kext updates when upgrading: WhateverGreen 1.7.1, VirtualSMC 1.3.8,
   AppleALC 1.9.8, AirportBrcmFixup 2.2.1.
-- [ ] Thunderbolt-after-sleep bug still open. Experiment: load
-  `OC/Drivers/TbtForcePower.efi` (kept on disk, currently not in `UEFI →
-  Drivers`) — it forces the TB controller power state at boot and has
-  helped ALP (Alpine Ridge) hotplug/sleep quirks on some boards.
-  (`IOElectrify.kext` was removed — superseded by Apple's native
-  Thunderbolt stack since Big Sur.)
+- [ ] **Sleep bug = full crash** (2026-10-20). Not just "buggy sleep" —
+  the machine crashes. Two hypotheses: TB Display's USB hub adds ports
+  (NOTE: the 15-port limit is gone since macOS 11+, so exceeding it
+  shouldn't crash Sequoia — port count is a weak suspect), or wake-path /
+  USB power-state issue with the TB controller. Plan:
+  - [ ] Grab the `*.panic` from `/Library/Logs/DiagnosticReports/` after a
+        crash and look at the faulting kext.
+  - [ ] Reproduce with TB Display unplugged → isolates TB vs. base system.
+  - [ ] Experiment: load `OC/Drivers/TbtForcePower.efi` (kept on disk,
+        currently not in `UEFI → Drivers`) — it forces the TB controller
+        power state at boot and has helped ALP (Alpine Ridge)
+        hotplug/sleep quirks on some boards. (`IOElectrify.kext` was
+        removed — superseded by Apple's native Thunderbolt stack since
+        Big Sur.)
 
 ## If macOS Tahoe (26) ever becomes interesting
 
