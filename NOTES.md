@@ -39,6 +39,14 @@ Working notes for this machine (not part of the guide itself).
         hotplug/sleep quirks on some boards. (`IOElectrify.kext` was
         removed — superseded by Apple's native Thunderbolt stack since
         Big Sur.)
+- [ ] **USB: full remap (do AFTER sleep debugging).** The 15-port limit is
+  gone since macOS 11, so all ports can be mapped without risk. Current
+  `USBMap.kext` simply omits HS03–06/HS11 (+ SS pairs) — those rear ports
+  likely already work, just undescribed (may misreport speed). Don't
+  hand-guess HS↔SS mux pairings: re-map every port with **USBToolBox**
+  (plug a stick into each one) and keep the personality keyed to
+  `iMac19,2` (`iMac19,2-XHC` + `model`), or the map silently stops
+  applying.
 
 ## If macOS Tahoe (26) ever becomes interesting
 
