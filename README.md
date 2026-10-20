@@ -7,13 +7,13 @@
 - iGPU: Intel® UHD Graphics 630
 - dGPU: AMD Radeon RX 560 4GB
 - Lan: Intel® I219V, 1 x Gigabit LAN Controller
-- WiFi/Bluetooth: BCM94360CS2
+- WiFi/Bluetooth: BCM4360/BCM20702A0
 - Audio: Realtek® ALC S1220A 8-Channel High Definition Audio
 
 ## Comments
-This Hackintosh build guide is NOT GUARANTEED 100% fully working in your conditions. This guide has been tested on MacOS Mojave, Catalina and Big Sur on an AMD dGPU.
+This Hackintosh build guide is NOT GUARANTEED 100% fully working in your conditions. This guide has been tested on MacOS Sequoia 15.7.4 on an AMD dGPU.
 
-As far as I have been able to test, everything works well except Thunderbolt devices stop working after sleep (but work on boot, tested with Thunderbolt Display and TB3->TB1 adapter).
+As far as I have been able to test, everything works well except Thunderbolt devices stop working after sleep (but work on boot, tested with Thunderbolt Display and TB3->TB1 adapter). I have tried the modded firmware for the ASUS ThunderboltEX3 (https://github.com/utopia-team/Thunderbolt), but I still haven't been able to make sleep work. Maybe the thunderbolt adds USB ports which exceed the 15 port limit. Still working on it. 
 
 Some ports in the back were disabled to keep ports within the 15 port limit.
 
@@ -30,7 +30,7 @@ Special Thanks to dhckdgjs (initial repository owner), CaseySJ(at tonymacx86.com
 ## Procedure
 1. Edit config.plist to have your own SmUUID and Serial Number
 2. Copy to your EFI folder
-3. Install MacOS
+3. Install MacOS 
 4. Done?
 
 ## Misc
