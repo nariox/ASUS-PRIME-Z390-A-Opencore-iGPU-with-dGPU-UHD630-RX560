@@ -1,0 +1,58 @@
+# Personal notes / TODO
+
+Working notes for this machine (not part of the guide itself).
+
+## To try in BIOS
+
+- [ ] **CFG-Lock**: disable it, then set `AppleXcpmCfgLock` → `false` in
+  `config.plist.template` (and re-run `sh OC/applyserialnums.sh`).
+  `OC/Tools/ControlMsrE2.efi` is kept so you can check MSR 0xE2 state from
+  the UEFI shell (`OC/Tools/OpenShell.efi`).
+- [ ] Confirm **DVMT Pre-Allocated ≥ 64 MB** (Sa/IGPU Config) — headless
+  UHD 630 still needs a small stolen memory carve-out.
+- [ ] **ReBAR / Resizable BAR: leave disabled.** `ResizeAppleGpuBars` is now
+  `-1` (disabled) to match. (BIOS 1005 likely doesn't expose ReBAR anyway.)
+- [ ] VT-d: currently off. **If** ever moving to the AppleBCMWLANCompanion
+  Wi-Fi route (see Tahoe notes below), VT-d must be **on** for it to work.
+
+## To-do
+
+- [ ] **Rotate SMBIOS**: the old identifiers were exposed in git history
+  (masked now, but clones/caches may still have them). Generate a fresh set
+  with GenSMBIOS (platform `iMac19,2`), put all four values in
+  `OC/LocalSettings.txt`, run `sh OC/applyserialnums.sh`.
+  Note: `USBMap.kext` is keyed to `iMac19,2-XHC` — keep that model.
+- [ ] **OpenCore 1.0.7 → 1.0.8** (decided to postpone; do soon).
+- [ ] Kext updates when upgrading: WhateverGreen 1.7.1, VirtualSMC 1.3.8,
+  AppleALC 1.9.8, AirportBrcmFixup 2.2.1.
+- [ ] Thunderbolt-after-sleep bug still open. Experiment: load
+  `OC/Drivers/TbtForcePower.efi` (kept on disk, currently not in `UEFI →
+  Drivers`) — it forces the TB controller power state at boot and has
+  helped ALP (Alpine Ridge) hotplug/sleep quirks on some boards.
+  (`IOElectrify.kext` was removed — superseded by Apple's native
+  Thunderbolt stack since Big Sur.)
+
+## If macOS Tahoe (26) ever becomes interesting
+
+Per Dortania's Tahoe notes, current setup breaks in two places:
+
+- **Audio (ALC S1220A)**: AppleHDA.kext is gone from macOS 26, so AppleALC
+  stops working for analog outputs. Options: VoodooHDA (lower quality),
+  OCLP-style root patching to restore AppleHDA, or move audio to HDMI/DP
+  (RX 6600) / USB. Nothing to pre-change on Sequoia.
+- **Wi-Fi (BCM4360)**: the IO80211FamilyLegacy injection hack is only known
+  to work on macOS 13–15. For 15/26 the maintained route is
+  **AppleBCMWLANCompanion** (0xFireWolf) — no root patches, needs **VT-d
+  enabled** in BIOS, but "not fully stable or feature complete".
+- **SMBIOS**: iMac19,x is unsupported on Tahoe → would need iMac20,x
+  (2020 iMac) plus `RestrictEvents.efi` with `revpatch=sbvmm` for OTA
+  updates (`SecureBootModel: Disabled` already set ✔).
+- Recommendation: stay on Sequoia (supported until ~2027) unless a specific
+  Tahoe feature is needed.
+
+## Serial workflow
+
+- `OC/config.plist` = live config (git-ignored). Never commit it.
+- `OC/config.plist.template` = committed, identifiers are placeholders.
+- After editing the template, run `sh OC/applyserialnums.sh` (from `OC/`)
+  to regenerate `config.plist` from `LocalSettings.txt`.
