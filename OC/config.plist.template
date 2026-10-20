@@ -185,7 +185,7 @@
                 <key>RebuildAppleMemoryMap</key>
                 <true/>
                 <key>ResizeAppleGpuBars</key>
-                <integer>-1</integer>
+                <integer>0</integer>
                 <key>SetupVirtualMap</key>
                 <true/>
                 <key>SignalAppleOS</key>
@@ -891,9 +891,9 @@
                 <false/>
                 <key>AppleXcpmForceBoost</key>
                 <false/>
-                <key>CustomPciSerialDevice</key>
-                <false/>
                 <key>CustomSMBIOSGuid</key>
+                <false/>
+                <key>CustomPciSerialDevice</key>
                 <false/>
                 <key>DisableIoMapper</key>
                 <true/>
@@ -1463,7 +1463,7 @@
                     <key>bluetoothInternalControllerInfo</key>
                     <data>AAAAAAAAAAAAAAAAAAA=</data>
                     <key>boot-args</key>
-                    <string>keepsyms=1 debug=0x100 brcmfx-country=#a -btlfxboardid -btlfxbeta -btlfxallowanyaddr amfi=0x80</string>
+                    <string>keepsyms=1 debug=0x100 brcmfx-country=#a -btlfxboardid -btlfxbeta -btlfxallowanyaddr amfi=0x80 agdpmod=pikera</string>
                     <key>csr-active-config</key>
                     <data>/w8AAA==</data>
                     <key>prev-lang:kbd</key>
@@ -1492,6 +1492,8 @@
             </dict>
             <key>LegacyOverwrite</key>
             <false/>
+            <key>WriteFlash</key>
+            <true/>
             <key>LegacySchema</key>
             <dict>
                 <key>7C436110-AB2A-4BBB-A880-FE41995C9F82</key>
@@ -1518,8 +1520,6 @@
                     <string>BootOrder</string>
                 </array>
             </dict>
-            <key>WriteFlash</key>
-            <true/>
         </dict>
         <key>PlatformInfo</key>
         <dict>
@@ -1531,10 +1531,10 @@
             <dict>
                 <key>AdviseFeatures</key>
                 <false/>
-                <key>MLB</key>
-                <string>YourMLB</string>
                 <key>MaxBIOSVersion</key>
                 <false/>
+                <key>MLB</key>
+                <string>YourMLB</string>
                 <key>ProcessorType</key>
                 <integer>4105</integer>
                 <key>ROM</key>
@@ -1598,9 +1598,9 @@
                 <integer>0</integer>
                 <key>PointerPollMask</key>
                 <integer>-1</integer>
-                <key>PointerPollMax</key>
-                <integer>0</integer>
                 <key>PointerPollMin</key>
+                <integer>0</integer>
+                <key>PointerPollMax</key>
                 <integer>0</integer>
                 <key>PointerSpeedDiv</key>
                 <integer>1</integer>
@@ -1750,10 +1750,10 @@
                 <false/>
                 <key>TextRenderer</key>
                 <string>BuiltinGraphics</string>
-                <key>UIScale</key>
-                <integer>-1</integer>
                 <key>UgaPassThrough</key>
                 <false/>
+                <key>UIScale</key>
+                <integer>-1</integer>
             </dict>
             <key>ProtocolOverrides</key>
             <dict>
@@ -1821,7 +1821,7 @@
                 <key>RequestBootVarRouting</key>
                 <true/>
                 <key>ResizeGpuBars</key>
-                <integer>-1</integer>
+                <integer>0</integer>
                 <key>ResizeUsePciRbIo</key>
                 <false/>
                 <key>ShimRetainProtocol</key>
