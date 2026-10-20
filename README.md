@@ -5,7 +5,7 @@
 - M/B: ASUS PRIME Z390-A(BIOS Ver. 1005)
 - CPU: Intel® Core™ i5-9400 Processor
 - iGPU: Intel® UHD Graphics 630
-- dGPU: AMD Radeon RX 560 4GB
+- dGPU: AMD Radeon RX 6600 8GB
 - Lan: Intel® I219V, 1 x Gigabit LAN Controller
 - WiFi/Bluetooth: BCM4360/BCM20702A0
 - Audio: Realtek® ALC S1220A 8-Channel High Definition Audio
