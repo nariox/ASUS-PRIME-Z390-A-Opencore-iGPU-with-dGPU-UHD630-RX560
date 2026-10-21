@@ -65,9 +65,9 @@ Recommended values from the Dortania guide (ASUS PRIME Z390-A, BIOS 1005):
   bar back down, or the RX 6600 may black-screen
 - VT-d: **Disabled** (the config keeps `DisableIoMapper=true` as a safety
   net either way)
-- CFG-Lock: **Disabled** if available (optional; the config currently uses
-  `AppleXcpmCfgLock=true` to live with it enabled — if you disable it in
-  BIOS, set `AppleXcpmCfgLock` to `false` too)
+- CFG-Lock: **Disabled** (verified with the `ControlMsrE2` picker tool) —
+  the config matches with `AppleXcpmCfgLock=false`; if you re-enable
+  CFG-Lock in BIOS, set it back to `true`
 - TPM / Intel Platform Trust / Intel SGX: **Disabled**
 - Serial / Parallel ports: **Disabled** if present
 - Wake on LAN / Wake on USB: **Disabled** (common cause of sleep/wake

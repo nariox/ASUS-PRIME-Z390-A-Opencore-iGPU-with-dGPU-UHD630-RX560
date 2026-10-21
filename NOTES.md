@@ -4,20 +4,17 @@ Working notes for this machine (not part of the guide itself).
 
 ## To try in BIOS
 
-- [ ] **CFG-Lock**: disable it, then set `AppleXcpmCfgLock` → `false` in
-  `config.plist.template` (and re-run `sh OC/applyserialnums.sh`).
-  Both tools now show directly in the picker (no Space needed):
-  **"Control MSR 0xE2 (CFG-Lock)"** to check the state; `OpenShell.efi`
+- [x] **CFG-Lock**: disabled in BIOS, verified with `ControlMsrE2` in the
+  picker (2026-10-21). `AppleXcpmCfgLock` set to `false` in the template.
+  Both tools show directly in the picker (no Space needed); `OpenShell.efi`
   is there too if you need the full shell.
 - [ ] Confirm **DVMT Pre-Allocated ≥ 64 MB** (Sa/IGPU Config) — headless
   UHD 630 still needs a small stolen memory carve-out.
-- [ ] **Above 4G Decoding: Enabled** (recommended; more BAR allocation room —
-  not strictly required by the RX 6600 since its default BARs fit under 4 GB,
-  but it is the recommended state). Check it while in BIOS for CFG-Lock.
-- [ ] **ReBAR / Resizable BAR: leave disabled.** `ResizeAppleGpuBars` is now
-  `-1` (disabled) to match. If you ever enable ReBAR in BIOS, set
-  `ResizeAppleGpuBars` to `0` instead (else Navi may black-screen with an
-  8 GB BAR0). (BIOS 1005 likely doesn't expose ReBAR anyway.)
+- [x] **Above 4G Decoding: Enabled** — confirmed in BIOS (2026-10-21).
+- [x] **ReBAR / Resizable BAR: disabled** — confirmed in BIOS (2026-10-21);
+  `ResizeAppleGpuBars` is `-1` (disabled) to match. If it is ever enabled
+  in BIOS, set `ResizeAppleGpuBars` to `0` instead (else Navi may
+  black-screen with an 8 GB BAR0).
 - [ ] VT-d: currently off. **If** ever moving to the AppleBCMWLANCompanion
   Wi-Fi route (see Tahoe notes below), VT-d must be **on** for it to work.
 
