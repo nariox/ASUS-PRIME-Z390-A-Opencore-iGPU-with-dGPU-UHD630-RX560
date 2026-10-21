@@ -967,7 +967,7 @@
                     <key>Enabled</key>
                     <true/>
                     <key>LoadEarly</key>
-                    <false/>
+                    <true/>
                     <key>Path</key>
                     <string>OpenRuntime.efi</string>
                 </dict>
