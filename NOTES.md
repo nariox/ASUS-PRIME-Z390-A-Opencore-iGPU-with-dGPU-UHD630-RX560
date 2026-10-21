@@ -6,8 +6,9 @@ Working notes for this machine (not part of the guide itself).
 
 - [ ] **CFG-Lock**: disable it, then set `AppleXcpmCfgLock` → `false` in
   `config.plist.template` (and re-run `sh OC/applyserialnums.sh`).
-  `OC/Tools/ControlMsrE2.efi` is kept so you can check MSR 0xE2 state from
-  the UEFI shell (`OC/Tools/OpenShell.efi`).
+  Now exposed in the picker: **Space → "Control MSR 0xE2 (CFG-Lock)"** to
+  check the state; `OpenShell.efi` is also a picker tool if you need the
+  full shell.
 - [ ] Confirm **DVMT Pre-Allocated ≥ 64 MB** (Sa/IGPU Config) — headless
   UHD 630 still needs a small stolen memory carve-out.
 - [ ] **Above 4G Decoding: Enabled** (recommended; more BAR allocation room —
@@ -77,3 +78,40 @@ Per Dortania's Tahoe notes, current setup breaks in two places:
 - `OC/config.plist.template` = committed, identifiers are placeholders.
 - After editing the template, run `sh OC/applyserialnums.sh` (from `OC/`)
   to regenerate `config.plist` from `LocalSettings.txt`.
+
+## Intentional deviations from Dortania — do NOT "fix" these
+
+| Setting | Value | Why |
+| :--- | :--- | :--- |
+| SMBIOS | `iMac19,2` | Dortania's example is 19,1; both valid CFL. USBMap.kext is keyed to `iMac19,2-XHC` — changing model silently un-applies the map. |
+| `SecureBootModel` | `Disabled` | Dortania-compliant for 14.4–26.x (security page mandates it for OTA). Here only so nobody "restores" it to `Default` from older advice. |
+| `csr-active-config` `ff0f0000` + `amfi=0x80` | SIP partially off | Legacy Broadcom (`IO80211FamilyLegacy`) needs it. Dortania's default kills Wi-Fi. |
+| `Kernel→Block: IOSkywalkFamily` = Exclude | with MinKernel gate | Part of the same Wi-Fi recipe (mirrors OpenCore's own Sample). |
+| `ExtendBTFeatureFlags` | `true` | Paired with `-btlfxboardid -btlfxbeta -btlfxallowanyaddr`: this BCM4360/20702 adapter needs firmware override flags; keeps Continuity working. Dortania default is NO. |
+| `ThirdPartyDrives` | `true` | TRIM for third-party SATA drives; harmless for NVMe. |
+| XHC `acpi-wake-type=1` (DeviceProperties) | custom | Original author's USB-wake control; revisit only after the sleep crash is solved (toggle experiment). |
+| No `-v` in boot-args | daily-boot choice | Add `-v` temporarily when debugging boot. |
+| Canopy theme (Syrah), `Timeout 5`, AudioDxe/CrScreenshotDxe | user preference | Officially supported options. |
+
+## After the next boot (test this round's changes)
+
+- [ ] Boots at all with the pruned EFI + new quirks.
+- [ ] USB: System Information → USB shows correct types (HS12 = internal,
+      HS13/14 = USB2 rear, others USB3) → confirms the
+      `AppleUSBHostMergeProperties` map applies; pair a Bluetooth device.
+- [ ] Wi-Fi connects; analog + HDMI audio work; Ethernet works.
+- [ ] Sleep test per README (pmset prep first). With `swd_panic=1` a crash
+      should now leave a `.panic` in `/Library/Logs/DiagnosticReports/`.
+
+## Sleep crash — still-untried options (from Dortania sleep page)
+
+- Proper Thunderbolt path if TB + sleep both matter: osy's Thunderbolt 3
+  fix (https://osy.gitbook.io/hac-mini-guide/details/thunderbolt-3-fix/),
+  ThunderboltReset.kext, ThunderboltPkg.
+- IRQ conflicts: if crashes persist, rebuild SSDT-HPET properly with
+  SSDTTime "FixHPET" — requires the *rename patches* (the old committed
+  SSDT-HPET had none and was removed as inert). Do it on the Z390 itself
+  (needs a DSDT dump; this Linux box is a different PC — Gigabyte B650M).
+- NVMe: check SSD firmware is current (NVMeFix.kext already loaded).
+- iGPU RC6: `forceRenderStandby=0` boot-arg if the panic backtrace points
+  at iGPU power states.

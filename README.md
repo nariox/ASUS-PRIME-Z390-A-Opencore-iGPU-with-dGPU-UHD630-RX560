@@ -50,9 +50,11 @@ entries needed only by older macOS versions have been removed.
   Staying on Sequoia is recommended (supported until ~2027).
 
 ## BIOS settings
-Recommended values (ASUS PRIME Z390-A, BIOS 1005):
+Recommended values from the Dortania guide (ASUS PRIME Z390-A, BIOS 1005):
 - Secure Boot: **Disabled**
 - Fast Boot: **Disabled**
+- CSM (Compatibility Support Module): **Disabled** — with it on you'll see
+  GPU errors/stalls
 - XHCI Hand-off: **Enabled**
 - DVMT Pre-Allocated: **64 MB or higher** (needed by the headless iGPU)
 - Above 4G Decoding: **Enabled** (recommended — lets firmware place the GPU's
@@ -61,10 +63,18 @@ Recommended values (ASUS PRIME Z390-A, BIOS 1005):
   from it, and the config matches with `ResizeAppleGpuBars: -1`. If you do
   enable it anyway, set `ResizeAppleGpuBars` to `0` so OpenCore resizes the
   bar back down, or the RX 6600 may black-screen
+- VT-d: **Disabled** (the config keeps `DisableIoMapper=true` as a safety
+  net either way)
 - CFG-Lock: **Disabled** if available (optional; the config currently uses
   `AppleXcpmCfgLock=true` to live with it enabled — if you disable it in
   BIOS, set `AppleXcpmCfgLock` to `false` too)
-- Thunderbolt settings: leave at defaults
+- TPM / Intel Platform Trust / Intel SGX: **Disabled**
+- Serial / Parallel ports: **Disabled** if present
+- Wake on LAN / Wake on USB: **Disabled** (common cause of sleep/wake
+  loops; keep Wake on Bluetooth only if you wake the Mac with a BT device)
+- Thunderbolt settings: leave at defaults (for TB-vs-sleep debugging see the
+  notes below)
+- OS type: **Windows 8.1/10 UEFI Mode**; SATA Mode: **AHCI**
 
 ## Procedure
 1. Generate SMBIOS identifiers for **iMac19,2** with
