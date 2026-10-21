@@ -77,6 +77,11 @@ Recommended values (ASUS PRIME Z390-A, BIOS 1005):
    `OC/config.plist.template` with your values injected.
 4. Copy the `OC/` folder to your EFI partition and install macOS Sequoia.
 
+> [!NOTE]
+> At the OpenCore picker, press **Space** to reveal hidden entries (macOS
+> Recovery, the UEFI Shell, and `ControlMsrE2` for checking CFG-Lock).
+> `HideAuxiliary` is on by design (Dortania), so these don't clutter the list.
+
 ## USB
 A custom USB map (`OC/Kexts/USBMap.kext`) is included. Some rear ports are
 intentionally left unmapped. The BT module of the Wi-Fi card connects to
