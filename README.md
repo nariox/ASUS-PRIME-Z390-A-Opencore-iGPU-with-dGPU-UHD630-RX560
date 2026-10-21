@@ -25,16 +25,20 @@ entries needed only by older macOS versions have been removed.
 - USB (custom map), Thunderbolt devices when connected at boot
 
 ### Not working / known issues
-- **Sleep can crash the machine** (under investigation, see debugging notes
-  below).
-- **Thunderbolt USB devices stop working after sleep** — the Thunderbolt
-  Display itself keeps working; the peripherals behind it (camera, audio,
-  microphone, USB ports) do not come back. A few seconds with the display
-  unplugged from the wall outlet forces macOS to re-enumerate them and
-  fixes it until the next sleep. Tested with an Apple Thunderbolt Display
-  and a TB3→TB1 adapter. Also tested with the modded ASUS ThunderboltEX3
-  firmware (https://github.com/utopia-team/Thunderbolt) — sleep is still
-  broken.
+- **Thunderbolt + sleep is broken in two flavors** (tested with an Apple
+  Thunderbolt Display via a TB3→TB1 adapter): after wake, either the
+  Display itself stays dark (system is fine — but the login window
+  renders on the dead panel), or the Display comes back while its
+  built-in peripherals (camera, audio, microphone, USB ports) stay dead.
+  A few seconds with the display unplugged from the wall outlet forces
+  macOS to re-enumerate the whole chain and fixes it until the next
+  sleep. Also tested with the modded ASUS ThunderboltEX3 firmware
+  (https://github.com/utopia-team/Thunderbolt) — still broken.
+- **Sleep crash**: earlier builds crashed during sleep, but with the
+  Dortania `pmset` settings below the base system now sleeps and wakes
+  cleanly (verified 2026-10-21; no `.panic` produced). `TbtForcePower.efi`
+  is enabled to attack the remaining TB-wake failure — see the debugging
+  notes below for the current experiment queue.
 
 ### Not tested
 - FileVault
@@ -109,10 +113,16 @@ Dortania's sleep guide (https://github.com/dortania/OpenCore-Post-Install
   then read the report in `/Library/Logs/DiagnosticReports/` (`*.panic`) —
   the faulting kext in the backtrace is the fastest way to narrow it down.
 - Before testing, match Dortania's prep (disables hibernation/Power Nap and
-  the network/wake timers that mask sleep bugs):
+  the network/wake timers that mask sleep bugs; the sleepimage lock
+  prevents a hibernation image from ever being written mid-test):
   ```
-  sudo pmset autopoweroff 0 powernap 0 standby 0 proximitywake 0 tcpkeepalive 0 womp 0
+  sudo pmset -a disablesleep 0 hibernatemode 0 autopoweroff 0 standby 0 powernap 0 proximitywake 0 tcpkeepalive 0 womp 0
+  sudo rm -f /var/vm/sleepimage && sudo mkdir -p /var/vm/sleepimage && sudo chflags uchg /var/vm/sleepimage
   ```
+  Check with `pmset -g`: `SleepDisabled` must be `0` (it silently re-arms
+  on some setups and blocks all sleep). Sleep manually (Apple menu) or
+  with `pmset sleepnow`; `pmset -g log | grep -E 'Sleep|Wake|Denied'`
+  shows each attempt and its outcome.
 - The historical "15-port USB limit" no longer applies on macOS 11+
   (`XhciPortLimit` does nothing on Sequoia), so the extra USB ports added
   by a Thunderbolt display are **unlikely** to be the crash cause.

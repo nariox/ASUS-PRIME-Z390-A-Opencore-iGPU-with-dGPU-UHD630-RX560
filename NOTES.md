@@ -28,20 +28,29 @@ Working notes for this machine (not part of the guide itself).
 - [ ] **OpenCore 1.0.7 → 1.0.8** (decided to postpone; do soon).
 - [ ] Kext updates when upgrading: WhateverGreen 1.7.1, VirtualSMC 1.3.8,
   AppleALC 1.9.8, AirportBrcmFixup 2.2.1.
-- [ ] **Sleep bug = full crash** (2026-10-20). Not just "buggy sleep" —
-  the machine crashes. Two hypotheses: TB Display's USB hub adds ports
-  (NOTE: the 15-port limit is gone since macOS 11+, so exceeding it
-  shouldn't crash Sequoia — port count is a weak suspect), or wake-path /
-  USB power-state issue with the TB controller. Plan:
-  - [ ] Grab the `*.panic` from `/Library/Logs/DiagnosticReports/` after a
-        crash and look at the faulting kext.
-  - [ ] Reproduce with TB Display unplugged → isolates TB vs. base system.
-  - [ ] Experiment: load `OC/Drivers/TbtForcePower.efi` (kept on disk,
-        currently not in `UEFI → Drivers`) — it forces the TB controller
-        power state at boot and has helped ALP (Alpine Ridge)
-        hotplug/sleep quirks on some boards. (`IOElectrify.kext` was
-        removed — superseded by Apple's native Thunderbolt stack since
-        Big Sur.)
+- [ ] **Sleep bug — status 2026-10-21 (controlled tests)**:
+  - Base system (no TB Display): **2 clean sleep/wake cycles, NO crash**
+    (Dortania pmset prep + `disablesleep 0` + `hibernatemode 0` + locked
+    empty `/var/vm/sleepimage`). Slow-sleeper laggards noted: wifivelocityd
+    30 s timeout, apsd/universalcontrol 28 s timeouts (legacy Broadcom +
+    `tcpkeepalive 0` — expected).
+  - With Apple Thunderbolt Display: **still no crash**, but the TB Display
+    does not come back after wake (DP-tunnel retrain failure; known bug).
+    Nasty side effect: the login window renders on the dead display —
+    workarounds: blind-typed password, unplug display from wall (known
+    re-enumeration trick), or drive the machine over SSH during tests.
+  - => the "sleep crashes the machine" hypothesis narrows to TB. Also
+    spotted `shutdown_stall_*.shutdownStall` reports (17:39, 17:59) —
+    worth opening; may name the same device path as the stall cause.
+  - [x] `UEFI → Drivers`: **TbtForcePower.efi enabled** (Alpine Ridge
+        JHL6540 wake-power fix; designed countermeasure). TEST NEXT:
+        sleep cycles with TB Display attached.
+        (`IOElectrify.kext` stays removed — superseded by Apple's native
+        Thunderbolt stack since Big Sur.)
+  - [ ] If still dead after wake: ThunderboltReset + osy TB3 fix
+        (see "still-untried options" below).
+  - [ ] Grab the `*.panic` from `/Library/Logs/DiagnosticReports/` after
+        any crash (none produced so far — none needed).
 - [ ] **USB: full remap (do AFTER sleep debugging).** The 15-port limit is
   gone since macOS 11, so all ports can be mapped without risk. Current
   `USBMap.kext` simply omits HS03–06/HS11 (+ SS pairs) — those rear ports
@@ -97,8 +106,9 @@ Per Dortania's Tahoe notes, current setup breaks in two places:
       HS13/14 = USB2 rear, others USB3) → confirms the
       `AppleUSBHostMergeProperties` map applies; pair a Bluetooth device.
 - [ ] Wi-Fi connects; analog + HDMI audio work; Ethernet works.
-- [ ] Sleep test per README (pmset prep first). With `swd_panic=1` a crash
-      should now leave a `.panic` in `/Library/Logs/DiagnosticReports/`.
+- [x] Sleep test per README: **base system sleeps/wakes cleanly** (2026-10-21,
+      no `.panic`). Remaining failure is TB Display wake only — see the
+      sleep-bug section above.
 
 ## Sleep crash — still-untried options (from Dortania sleep page)
 
