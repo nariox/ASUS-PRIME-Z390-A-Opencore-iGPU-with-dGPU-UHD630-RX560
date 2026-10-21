@@ -638,7 +638,7 @@
                 <key>HibernateSkipsPicker</key>
                 <true/>
                 <key>HideAuxiliary</key>
-                <false/>
+                <true/>
                 <key>InstanceIdentifier</key>
                 <string></string>
                 <key>LauncherOption</key>
