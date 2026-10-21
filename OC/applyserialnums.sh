@@ -2,47 +2,80 @@
 # Regenerates config.plist from config.plist.template, injecting the personal
 # SMBIOS values stored in LocalSettings.txt (git-ignored).
 #
-# LocalSettings.txt must now contain ALL FOUR unique identifiers (GenSMBIOS
-# generates them together; ROM may be given as 12 hex chars or as base64):
+# LocalSettings.txt must contain ALL FOUR unique identifiers (GenSMBIOS
+# generates MLB + serial + UUID together; ROM is your MAC address as 12 hex
+# chars, or already base64):
 #   MLB=C02xxxxxxxxxxx
 #   SystemSerialNumber=xxxxxxxxxx
 #   SystemUUID=00000000-0000-0000-0000-000000000000
 #   ROM=049226BDC366
-
-PB=/usr/libexec/PlistBuddy
+#
+# Values are substituted BY PLIST KEY, never by matching placeholder text:
+# e.g. the ROM placeholder <data>AAAAAA==</data> is byte-identical to the
+# unrelated DefaultBackgroundColor data value, so text matching would corrupt
+# it. Substitution is plain XML editing, deliberately NOT PlistBuddy: its
+# <data> handling for Set corrupted ROM on a real run (double base64, rejected
+# by OpenCore: "OCS: Failed to parse data field ... context <ROM>").
+# The script validates the result and fails loudly.
+set -e
 
 if [ ! -f config.plist.template ] || [ ! -f LocalSettings.txt ]; then
     echo "Error: config.plist.template and LocalSettings.txt are both required"
     exit 1
 fi
 
-while read line; do
-    case "$line" in
-        ''|\#*) continue ;;
-    esac
-    export "$line"
-done < LocalSettings.txt
+python3 - <<'PY'
+import base64, binascii, plistlib, re, sys
 
-for var in MLB SystemSerialNumber SystemUUID ROM; do
-    eval "val=\$$var"
-    if [ -z "$val" ]; then
-        echo "Error: $var is missing from LocalSettings.txt (see header of this script)"
-        exit 1
-    fi
-done
+vals = {}
+for line in open('LocalSettings.txt'):
+    line = line.strip()
+    if not line or line.startswith('#') or '=' not in line:
+        continue
+    k, v = line.split('=', 1)
+    vals[k.strip()] = v.strip()
 
-# Accept ROM as 12 hex chars (GenSMBIOS style) and convert to base64,
-# otherwise assume it is already base64.
-ROM_STRIPPED=$(printf '%s' "$ROM" | tr -d '0-9A-Fa-f')
-if [ ${#ROM} -eq 12 ] && [ -z "$ROM_STRIPPED" ]; then
-    ROM=$(printf '%s' "$ROM" | xxd -r -p | base64 | tr -d '\n')
-fi
+missing = [k for k in ('MLB', 'SystemSerialNumber', 'SystemUUID', 'ROM') if not vals.get(k)]
+if missing:
+    sys.exit('Error: missing from LocalSettings.txt: ' + ', '.join(missing)
+             + '  (see header of this script for the format)')
 
-cp config.plist.template config.plist || exit 1
+rom = vals['ROM'].replace(':', '').replace('-', '').replace(' ', '')
+try:
+    rom_bytes = binascii.unhexlify(rom)
+    if len(rom_bytes) != 6:
+        raise binascii.Error
+except binascii.Error:
+    try:
+        rom_bytes = base64.b64decode(vals['ROM'].strip(), validate=True)
+    except binascii.Error:
+        sys.exit('Error: ROM must be 12 hex chars or base64, got: ' + vals['ROM'])
 
-$PB -c "Set :PlatformInfo:Generic:MLB $MLB"                             config.plist || exit 1
-$PB -c "Set :PlatformInfo:Generic:SystemSerialNumber $SystemSerialNumber" config.plist || exit 1
-$PB -c "Set :PlatformInfo:Generic:SystemUUID $SystemUUID"               config.plist || exit 1
-$PB -c "Set :PlatformInfo:Generic:ROM $ROM"                             config.plist || exit 1
+s = open('config.plist.template').read()
 
-echo "config.plist generated from template with your SMBIOS values."
+def set_key(s, key, tag, repl):
+    pat = re.compile(r'(<key>%s</key>\s*<%s>)[^<]*(</%s>)' % (key, tag, tag))
+    n = len(pat.findall(s))
+    if n != 1:
+        sys.exit('Error: expected exactly 1 <key>%s</key> <%s> in template, '
+                 'found %d -- aborting' % (key, tag, n))
+    return pat.sub(lambda m: m.group(1) + repl + m.group(2), s)
+
+s = set_key(s, 'MLB', 'string', vals['MLB'])
+s = set_key(s, 'SystemSerialNumber', 'string', vals['SystemSerialNumber'])
+s = set_key(s, 'SystemUUID', 'string', vals['SystemUUID'])
+s = set_key(s, 'ROM', 'data', base64.b64encode(rom_bytes).decode())
+open('config.plist', 'w').write(s)
+print('config.plist generated from template.')
+
+# Validation: plist parses AND every injected value round-trips correctly.
+g = plistlib.load(open('config.plist', 'rb'))['PlatformInfo']['Generic']
+assert g['MLB'] == vals['MLB'], 'MLB round-trip failed'
+assert g['SystemSerialNumber'] == vals['SystemSerialNumber'], 'serial round-trip failed'
+assert str(g['SystemUUID']).upper() == vals['SystemUUID'].upper(), 'UUID round-trip failed'
+assert bytes(g['ROM']) == rom_bytes, (
+    'ROM round-trip failed: config has %s, expected %s'
+    % (bytes(g['ROM']).hex(), rom_bytes.hex()))
+print('config.plist valid: all four identifiers round-trip OK (ROM = %s)'
+      % bytes(g['ROM']).hex().upper())
+PY
