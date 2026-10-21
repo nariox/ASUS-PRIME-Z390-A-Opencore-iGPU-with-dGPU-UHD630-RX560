@@ -36,9 +36,13 @@ entries needed only by older macOS versions have been removed.
   (https://github.com/utopia-team/Thunderbolt) — still broken.
 - **Sleep crash**: earlier builds crashed during sleep, but with the
   Dortania `pmset` settings below the base system now sleeps and wakes
-  cleanly (verified 2026-10-21; no `.panic` produced). `TbtForcePower.efi`
-  is enabled to attack the remaining TB-wake failure — see the debugging
-  notes below for the current experiment queue.
+  cleanly (verified 2026-10-21; no `.panic` produced). The crash re-armed
+  itself once with the Display attached and `pmset -g log` caught it:
+  `Failure during wake: RP17(AppleThunderboltHAL XHC3) : Some drivers
+  failed to handle setPowerState` — a hard hang in the ThunderboltEX3
+  wake path. `TbtForcePower.efi` is enabled (note: upstream says it only
+  forces power-on at boot; sleep/wake is out of its scope) — see the
+  debugging notes below for the current experiment queue.
 
 ### Not tested
 - FileVault
@@ -132,9 +136,14 @@ Dortania's sleep guide (https://github.com/dortania/OpenCore-Post-Install
   fix: https://osy.gitbook.io/hac-mini-guide/details/thunderbolt-3-fix/ ,
   ThunderboltReset) or disabling TB during install/debug.
 - Useful experiments, in order of effort:
-  1. reproduce with all Thunderbolt devices unplugged (isolates TB vs base);
-  2. try loading `OC/Drivers/TbtForcePower.efi` (kept on disk, not enabled
-     by default);
+  1. reproduce with the Display attached **now that `TbtForcePower.efi`
+     is enabled** — if the same `RP17(AppleThunderboltHAL XHC3)` Failure
+     line appears, the driver is exonerated (upstream: boot-power only);
+  2. hide XHC3 from macOS via DeviceProperties (`class-code ff ff ff ff`
+     on its PCIe path; get the path with
+     `ioreg -n XHC3 -l | grep -E '"acpi-path"|"pcidebug"'`) — TB video
+     keeps working, the Display's USB hub/camera are already broken by
+     this bug anyway;
   3. if the panic backtrace implicates the iGPU power states, try
      `forceRenderStandby=0` in boot-args (CFL iGPU RC6 quirk from the
      Dortania sleep page).

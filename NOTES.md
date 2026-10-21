@@ -42,13 +42,62 @@ Working notes for this machine (not part of the guide itself).
   - => the "sleep crashes the machine" hypothesis narrows to TB. Also
     spotted `shutdown_stall_*.shutdownStall` reports (17:39, 17:59) —
     worth opening; may name the same device path as the stall cause.
-  - [x] `UEFI → Drivers`: **TbtForcePower.efi enabled** (Alpine Ridge
-        JHL6540 wake-power fix; designed countermeasure). TEST NEXT:
-        sleep cycles with TB Display attached.
+  - [x] **SMOKING GUN (2026-10-21 ~19:11, idle sleep with TB Display)**:
+        `pmset -g log` recorded
+        `Failure during wake: RP17(AppleThunderboltHAL XHC3) : Some
+        drivers failed to handle setPowerState panic`
+        — hard hang + silent reboot, no `.panic` (kernel died before the
+        writer). Culprit = ThunderboltEX3 (JHL6540) + its XHC3 USB
+        controller power-state transition on wake. `AMDRadeonAccelerator
+        transaction ... 0xe00002d7` (kIOReturnNotReady) after wake =
+        bystander. Countermeasure ladder:
+        1. TbtForcePower.efi — enabled 2026-10-21 (commit 2fdc305).
+           CONFIRMED by user: the crashing boot did NOT have the driver
+           active — the crash predates it and does not invalidate it.
+           CAVEAT (upstream FAQ, al3xtjames/ThunderboltPkg): the driver's
+           ONLY function is powering the controller on AT BOOT via the
+           chipset GPIO from TBT_INFO_HOB; "sleep/wake support,
+           hotplugging, or any other features are strictly out of scope".
+           So expectation for the wake-hang: LOW — test it anyway (free),
+           but do not trust a green result either way. (EX3 is a discrete
+           card; the chipset force-power GPIO may not even govern it.)
+        2. If the same Failure line survives: hide XHC3 from macOS
+           (DeviceProperties class-code mask ffffffff on its PCIe path) —
+           TB video survives; the Display's USB/camera behind XHC3 are
+           already broken by this bug anyway. Needs the exact path:
+           `ioreg -n XHC3 -l | grep -E '"acpi-path"|"pcidebug"'`
+           (acpi-path names the ACPI device, pcidebug gives the
+           PciRoot(...)/Pci(...) path to key DeviceProperties on).
+           NOTE: AppleThunderboltHAL stays visible either way (hiding it
+           would kill the TB Display's DP tunnel) — if the hang is HAL's
+           alone, next lever is the `power-save` flag in ThunderboltConfig
+           of SSDT-TB3-RP17.aml (needs CaseySJ's source .dsl from the
+           tonymacx86 EX3 thread; we only hold the compiled .aml).
+        3. BIOS GPIO-force-power option IF exposed (Gigabyte calls it
+           "GPIO3 Force PWR"; ASUS PRIME Z390-A may not expose anything
+           similar) — keeps card powered through sleep at platform level.
+        What SSDT-TB3-RP17.aml actually declares (from strings disasm):
+        CaseySJ Alpine Ridge EX3 tree under `\_SB.PCI0.RP17`: PXSX, NHI0
+        (+ThunderboltDROM/ThunderboltConfig `power-save`, linkDetails),
+        DSB1/DSB2, XHC3 (+AAPL,current-in-sleep etc.), RHUB/HS01/SSP1
+        USB-C port — and `_PRW` (wake-from-sleep source) on RP17, PXSX,
+        NHI0, DSB1, DSB2, XHC3 and RHUB, i.e. the whole failing subtree
+        is wake-enabled. Built-in XHC (PciRoot(0x0)/Pci(0x14,0x0)) has
+        `acpi-wake-type=1` in DeviceProperties; XHC3 has no entry yet.
+        4. Practical fallback: `pmset sleep 0` (never idle-sleep; manual
+           sleep only if it proves safe).
+  - [x] `UEFI → Drivers`: **TbtForcePower.efi enabled** (see ladder
+        caveat: boot-power only). TEST NEXT: sleep cycles with TB
+        Display attached.
         (`IOElectrify.kext` stays removed — superseded by Apple's native
         Thunderbolt stack since Big Sur.)
-  - [ ] If still dead after wake: ThunderboltReset + osy TB3 fix
-        (see "still-untried options" below).
+  - [ ] Dortania's two TB links are now assessed and exhausted:
+        osy86/ThunderboltReset = "Reset and disable the Thunderbolt ICM"
+        (ICM-managed controllers only; EX3/Alpine Ridge has no ICM →
+        not applicable); al3xtjames/ThunderboltPkg = firmware-update
+        tools + TbtForcePower itself (FAQ: wake explicitly out of scope).
+        Remaining real paths: osy TB3-fix-style surgery (XHC3 hide /
+        `power-save` flag — ladder above) or disable TB.
   - [ ] Grab the `*.panic` from `/Library/Logs/DiagnosticReports/` after
         any crash (none produced so far — none needed).
 - [ ] **USB: full remap (do AFTER sleep debugging).** The 15-port limit is
@@ -113,8 +162,10 @@ Per Dortania's Tahoe notes, current setup breaks in two places:
 ## Sleep crash — still-untried options (from Dortania sleep page)
 
 - Proper Thunderbolt path if TB + sleep both matter: osy's Thunderbolt 3
-  fix (https://osy.gitbook.io/hac-mini-guide/details/thunderbolt-3-fix/),
-  ThunderboltReset.kext, ThunderboltPkg.
+  fix (https://osy.gitbook.io/hac-mini-guide/details/thunderbolt-3-fix/);
+  for this machine the relevant knobs are inside the already-loaded
+  `SSDT-TB3-RP17.aml` (ThunderboltConfig `power-save`, per-device `_PRW`)
+  and DeviceProperties on XHC3 — see the countermeasure ladder above.
 - IRQ conflicts: if crashes persist, rebuild SSDT-HPET properly with
   SSDTTime "FixHPET" — requires the *rename patches* (the old committed
   SSDT-HPET had none and was removed as inert). Do it on the Z390 itself
