@@ -88,9 +88,10 @@ Recommended values from the Dortania guide (ASUS PRIME Z390-A, BIOS 1005):
 4. Copy the `OC/` folder to your EFI partition and install macOS Sequoia.
 
 > [!NOTE]
-> At the OpenCore picker, press **Space** to reveal hidden entries (macOS
-> Recovery, the UEFI Shell, and `ControlMsrE2` for checking CFG-Lock).
-> `HideAuxiliary` is on by design (Dortania), so these don't clutter the list.
+> The OpenCore picker always shows the two tools: `OpenShell` (UEFI shell)
+> and `ControlMsrE2` (checks whether CFG-Lock is enabled). Other auxiliary
+> entries, such as macOS Recovery, stay hidden — press **Space** to reveal
+> them (`HideAuxiliary` is on by design, per Dortania).
 
 ## USB
 A custom USB map (`OC/Kexts/USBMap.kext`) is included. Some rear ports are

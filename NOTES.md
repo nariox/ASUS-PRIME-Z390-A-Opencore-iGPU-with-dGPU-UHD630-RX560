@@ -6,9 +6,9 @@ Working notes for this machine (not part of the guide itself).
 
 - [ ] **CFG-Lock**: disable it, then set `AppleXcpmCfgLock` → `false` in
   `config.plist.template` (and re-run `sh OC/applyserialnums.sh`).
-  Now exposed in the picker: **Space → "Control MSR 0xE2 (CFG-Lock)"** to
-  check the state; `OpenShell.efi` is also a picker tool if you need the
-  full shell.
+  Both tools now show directly in the picker (no Space needed):
+  **"Control MSR 0xE2 (CFG-Lock)"** to check the state; `OpenShell.efi`
+  is there too if you need the full shell.
 - [ ] Confirm **DVMT Pre-Allocated ≥ 64 MB** (Sa/IGPU Config) — headless
   UHD 630 still needs a small stolen memory carve-out.
 - [ ] **Above 4G Decoding: Enabled** (recommended; more BAR allocation room —
