@@ -85,17 +85,33 @@ the internal USB2 header (HS12); HS13/HS14 are the rear USB2 ports:
 ![PRIME Z390-A - USB port map final](https://user-images.githubusercontent.com/35429874/61994465-821cb780-b0b5-11e9-9d00-b12ed9046afc.jpg)
 
 ## Sleep crash debugging notes
+Dortania's sleep guide (https://github.com/dortania/OpenCore-Post-Install
+/universal/sleep.md) is the playbook here. Notes specific to this machine:
+
+- `swd_panic=1` is now in boot-args: when sleep fails it forces a real
+  kernel panic **with a log** instead of a silent reboot. Reproduce a crash,
+  then read the report in `/Library/Logs/DiagnosticReports/` (`*.panic`) —
+  the faulting kext in the backtrace is the fastest way to narrow it down.
+- Before testing, match Dortania's prep (disables hibernation/Power Nap and
+  the network/wake timers that mask sleep bugs):
+  ```
+  sudo pmset autopoweroff 0 powernap 0 standby 0 proximitywake 0 tcpkeepalive 0 womp 0
+  ```
 - The historical "15-port USB limit" no longer applies on macOS 11+
   (`XhciPortLimit` does nothing on Sequoia), so the extra USB ports added
   by a Thunderbolt display are **unlikely** to be the crash cause.
   Wake-path / USB power-state issues with the Thunderbolt controller are
-  the more likely suspect.
-- When a sleep crash happens, collect the panic report from
-  `/Library/Logs/DiagnosticReports/` (`*.panic`) — the faulting kext in
-  the backtrace is the fastest way to narrow it down.
-- Useful experiments: reproduce with all Thunderbolt devices unplugged;
-  try loading `OC/Drivers/TbtForcePower.efi` (kept on disk, not enabled by
-  default).
+  the more likely suspect. Dortania is blunt about Thunderbolt: working TB
+  + working sleep usually means *patching TB properly* (osy's Thunderbolt 3
+  fix: https://osy.gitbook.io/hac-mini-guide/details/thunderbolt-3-fix/ ,
+  ThunderboltReset) or disabling TB during install/debug.
+- Useful experiments, in order of effort:
+  1. reproduce with all Thunderbolt devices unplugged (isolates TB vs base);
+  2. try loading `OC/Drivers/TbtForcePower.efi` (kept on disk, not enabled
+     by default);
+  3. if the panic backtrace implicates the iGPU power states, try
+     `forceRenderStandby=0` in boot-args (CFL iGPU RC6 quirk from the
+     Dortania sleep page).
 
 ## Misc
 If you need other detailed settings for this ASUS PRIME Z390-A board

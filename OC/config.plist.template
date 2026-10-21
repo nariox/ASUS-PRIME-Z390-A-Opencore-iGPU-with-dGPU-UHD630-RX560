@@ -774,7 +774,7 @@
                     <key>bluetoothInternalControllerInfo</key>
                     <data>AAAAAAAAAAAAAAAAAAA=</data>
                     <key>boot-args</key>
-                    <string>keepsyms=1 debug=0x100 brcmfx-country=#a -btlfxboardid -btlfxbeta -btlfxallowanyaddr amfi=0x80 agdpmod=pikera</string>
+                    <string>keepsyms=1 debug=0x100 swd_panic=1 brcmfx-country=#a -btlfxboardid -btlfxbeta -btlfxallowanyaddr amfi=0x80 agdpmod=pikera</string>
                     <key>csr-active-config</key>
                     <data>/w8AAA==</data>
                     <key>prev-lang:kbd</key>
