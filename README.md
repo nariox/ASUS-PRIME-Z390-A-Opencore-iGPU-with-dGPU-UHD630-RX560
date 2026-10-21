@@ -55,8 +55,12 @@ Recommended values (ASUS PRIME Z390-A, BIOS 1005):
 - Fast Boot: **Disabled**
 - XHCI Hand-off: **Enabled**
 - DVMT Pre-Allocated: **64 MB or higher** (needed by the headless iGPU)
-- Above 4G Decoding / Resizable BAR: **Disabled** (the config disables bar
-  resizing accordingly)
+- Above 4G Decoding: **Enabled** (recommended — lets firmware place the GPU's
+  MMIO BARs above the 4 GB boundary, which macOS handles fine)
+- Re-Size BAR Support (Resizable BAR): **Disabled** — macOS gains nothing
+  from it, and the config matches with `ResizeAppleGpuBars: -1`. If you do
+  enable it anyway, set `ResizeAppleGpuBars` to `0` so OpenCore resizes the
+  bar back down, or the RX 6600 may black-screen
 - CFG-Lock: **Disabled** if available (optional; the config currently uses
   `AppleXcpmCfgLock=true` to live with it enabled — if you disable it in
   BIOS, set `AppleXcpmCfgLock` to `false` too)
