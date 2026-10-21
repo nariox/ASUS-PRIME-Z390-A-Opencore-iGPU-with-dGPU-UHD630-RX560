@@ -618,7 +618,7 @@
                 <key>CustomKernel</key>
                 <false/>
                 <key>FuzzyMatch</key>
-                <false/>
+                <true/>
                 <key>KernelArch</key>
                 <string>Auto</string>
                 <key>KernelCache</key>
