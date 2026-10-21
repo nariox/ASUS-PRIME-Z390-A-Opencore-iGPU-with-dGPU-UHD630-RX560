@@ -752,7 +752,7 @@
                     <key>Arguments</key>
                     <string></string>
                     <key>Auxiliary</key>
-                    <true/>
+                    <false/>
                     <key>Comment</key>
                     <string>UEFI shell for debugging (runs ControlMsrE2 etc.)</string>
                     <key>Enabled</key>
@@ -774,7 +774,7 @@
                     <key>Arguments</key>
                     <string></string>
                     <key>Auxiliary</key>
-                    <true/>
+                    <false/>
                     <key>Comment</key>
                     <string>Shows/locks MSR 0xE2 (CFG-Lock) state</string>
                     <key>Enabled</key>
