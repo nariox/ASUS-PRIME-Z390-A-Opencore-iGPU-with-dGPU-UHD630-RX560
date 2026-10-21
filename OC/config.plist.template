@@ -847,7 +847,7 @@
                 <key>MLB</key>
                 <string>YourMLB</string>
                 <key>ProcessorType</key>
-                <integer>4105</integer>
+                <integer>0</integer>
                 <key>ROM</key>
                 <data>AAAAAA==</data>
                 <key>SpoofVendor</key>
