@@ -96,28 +96,54 @@ Working notes for this machine (not part of the guide itself).
              not in the repo — OpenCore only requires files for enabled
              entries; it is the emergency no-map fallback switch). The
              zero-port map alone does not disable the XHC3 controller for
-             PM purposes — superseded by ladder step 2 (class-code hide,
-             applied same day).
-        2. **APPLIED 2026-10-22** — Hide XHC3 from macOS (DeviceProperties
-           class-code mask ffffffff on
-           `PciRoot(0x0)/Pci(0x1B,0x0)/Pci(0x0,0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)`
-           — verified from ioreg, `pcidebug 11:0:0`). Formerly HELD
-           because it would kill "the Display's USB behind XHC3" —
-           user fact-check 2026-10-22 voids that: XHC3 is the USB port
-           on the EX3 card itself, dead under the utopia-team firmware
-           regardless, and the TB Display's USB devices enumerate through
-           another path. Hide costs nothing. NOTE: zeroing the map ports
-           is NOT sufficient — that leaves the controller probed and in
-           the wake PM set; only the class-code hide removes it.
-           AppleThunderboltHAL stays visible either way (hiding it
-           would kill the TB Display's DP tunnel) — and since the panic
-           backtrace hangs in the TB family's own startScan, if the
-           hide alone doesn't stop the wake panic, next lever is the
-           `power-save` flag in ThunderboltConfig of SSDT-TB3-RP17.aml
-           (needs CaseySJ's source .dsl from the tonymacx86 EX3 thread;
-           we only hold the compiled .aml). If EX3 firmware ever returns
-           to stock, delete the DeviceProperties entry to get the
-           card's USB port back.
+             PM purposes — and neither does the class-code hide (driver
+             matches by device-id, see ladder step 2 correction); the
+             zero-port merge is nonetheless the most effective lever
+             available short of ACPI _STA removal.
+        2. **APPLIED 2026-10-22, EFFECTIVENESS CORRECTED SAME DAY** — Hide
+           XHC3 from macOS (DeviceProperties class-code mask ffffffff on
+           `PciRoot(0x0)/Pci(0x1B,0x0)/Pci(0x0,0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)`).
+           Formerly HELD because it would kill "the Display's USB behind
+           XHC3" — user fact-check 2026-10-22 voids that: XHC3 is the
+           USB-C port on the EX3 card itself, dead under the utopia-team
+           firmware regardless, and the TB Display's USB devices enumerate
+           through ANOTHER path entirely (see TOPOLOGY below).
+           VERIFIED IN ioreg (2026-10-22, capture in repo root):
+           - class-code injection lands (`class-code = ffffffff`) BUT does
+             NOT unbind the driver — AppleUSBXHCIAR matches by device-id
+             (`IOPCIPrimaryMatch` literally lists `0x15d48086` = JHL6540
+             xHCI) and ignores class-code. XHC3 stays registered/matched/
+             active, so it is STILL in the wake PM round. The hide is
+             cosmetic; harmless, kept.
+           - What actually guts XHC3 is the zero-port UTBMap personality
+             (`port-count 0x00` verified merged onto XHC3's driver node):
+             controller up, no root ports, minimal wake work.
+           - TRUE removal would need the ACPI level: patch XHC3's `_STA`
+             to return 0 in SSDT-TB3-RP17 — and iasl can decompile the
+             .aml we hold (`iasl -d`), so CaseySJ's source .dsl is NOT
+             actually required for this or for the power-save-flag edit.
+           AppleThunderboltHAL stays visible either way (hiding it would
+           kill the TB Display's DP tunnel). If the sleep re-test still
+           fails with zero-port XHC3, next levers in order:
+           (a) `_STA=0` on XHC3 via decompiled+recompiled SSDT,
+           (b) `power-save` flag in ThunderboltConfig (same decompile),
+           (c) BIOS GPIO-force-power, (d) `pmset sleep 0`.
+
+           TOPOLOGY (2026-10-22 ioreg, verified): the TB Display's USB is
+           NOT behind XHC3. Path: RP17 → UPSB → DSB1 → Pericom
+           PI7C9X440SL PCIe-USB2 EHCI bridge (`pci12d8,400f`, driver
+           `AppleUSBEHCIPI7C9X440SL`, `pcidebug 21:0:2` — reached through
+           the TB PCIe tunnel, its own root hub) → Display's internal
+           USB2 hub → Display Audio, FaceTime HD Camera (Display),
+           downstream USB ports; display brightness control rides this
+           same USB link. The ORIGINAL UTBMap personality named `21:0:2`
+           was labeling THIS Pericom bridge (4 ports, connector 255) —
+           NOT XHC3; the user's rename-to-`XHC3`+zero correctly hit the
+           real XHC3 instead (IONameMatch `XHC3`). The Pericom needs no
+           personality (generic EHCI enumeration, confirmed working with
+           audio+camera active in the capture). NOTHING must be done to
+           preserve Display audio/camera/brightness — the current config
+           already leaves that branch untouched.
         3. BIOS GPIO-force-power option IF exposed (Gigabyte calls it
            "GPIO3 Force PWR"; ASUS PRIME Z390-A may not expose anything
            similar) — keeps card powered through sleep at platform level.

@@ -161,24 +161,23 @@ Dortania's sleep guide (https://github.com/dortania/OpenCore-Post-Install
      `RP17(AppleThunderboltHAL XHC3)` failure line survives a mapped XHC3;
   2. SSDT surgery on `SSDT-TB3-RP17.aml`: clear the `power-save` flag in
      its `ThunderboltConfig` so macOS never deep-powers the controller
-     (needs CaseySJ's source .dsl from the tonymacx86 EX3 thread — we
-     only hold the compiled .aml);
-  3. **APPLIED 2026-10-22**: hide XHC3 from macOS via DeviceProperties
-     (`class-code ff ff ff ff` on
+     (no source needed — `iasl -d` decompiles the compiled .aml we hold
+     and it recompiles losslessly; the old "need CaseySJ's .dsl" note
+     was wrong);
+  3. **APPLIED 2026-10-22, effect corrected by ioreg**: DeviceProperties
+     `class-code ff ff ff ff` on
      `PciRoot(0x0)/Pci(0x1B,0x0)/Pci(0x0,0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)`
-     — verified from ioreg `pcidebug 11:0:0`). This used to be held in
-     reserve because it would kill the Display's USB — but that reasoning
-     is void: XHC3 is the USB-C port *on the ThunderboltEX3 card itself*,
-     which does not work under the utopia-team firmware anyway
-     (https://github.com/utopia-team/Thunderbolt), and the Display's USB
-     hub / camera / audio do NOT enumerate through XHC3. So the hide is
-     free: it removes the XHC3 driver from the failing wake group named
-     by `pmset` (`RP17(AppleThunderboltHAL XHC3)`). Caveat: the panic
-     backtrace hangs inside IOThunderboltFamily's own wake scan, so if
-     the hang is purely the TB HAL, the `power-save` flag surgery
-     (step 2 above) remains the next lever. If the EX3 ever goes back to
-     stock firmware, remove the DeviceProperties entry to restore its
-     USB port;
+     was intended to remove XHC3 (the EX3 card's own USB-C port — dead
+     under the utopia-team firmware anyway, and the Display's USB does
+     NOT route through it) from the failing wake group. VERDICT FROM
+     CAPTURE: the property lands but does NOT unbind `AppleUSBXHCIAR` —
+     that driver matches by device-id (`0x15d48086`) and ignores
+     class-code, so XHC3 stays in the wake round. Harmless, kept as
+     cosmetic. What actually guts XHC3 is the zero-port `UTBMap`
+     personality (`port-count 0x00`, verified merged): controller alive,
+     no root ports, minimal wake work. If the sleep re-test still fails,
+     real removal = patch XHC3 `_STA` to return 0 in the decompiled
+     `SSDT-TB3-RP17`;
   4. if the panic backtrace implicates the iGPU power states, try
      `forceRenderStandby=0` in boot-args (CFL iGPU RC6 quirk from the
      Dortania sleep page).
