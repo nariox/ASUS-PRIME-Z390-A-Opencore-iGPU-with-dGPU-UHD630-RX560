@@ -31,11 +31,15 @@ Working notes for this machine (not part of the guide itself).
 - [ ] Kext updates when upgrading: WhateverGreen 1.7.1, VirtualSMC 1.3.8,
   AppleALC 1.9.8, AirportBrcmFixup 2.2.1.
 - [ ] **Sleep bug — status 2026-10-21 (controlled tests)**:
-  - Base system (no TB Display): **2 clean sleep/wake cycles, NO crash**
-    (Dortania pmset prep + `disablesleep 0` + `hibernatemode 0` + locked
-    empty `/var/vm/sleepimage`). Slow-sleeper laggards noted: wifivelocityd
+  - Base system (no TB Display): ~~**2 clean sleep/wake cycles, NO
+    crash**~~ **VOID 2026-10-22: Display-less sleep crashes too** — see
+    "Sleep crash — CLOSED" below. (Original observation: Dortania pmset
+    prep + `disablesleep 0` + `hibernatemode 0` + locked empty
+    `/var/vm/sleepimage`. Slow-sleeper laggards noted: wifivelocityd
     30 s timeout, apsd/universalcontrol 28 s timeouts (legacy Broadcom +
-    `tcpkeepalive 0` — expected).
+    `tcpkeepalive 0` — expected). Suspect the "clean" cycles never truly
+    slept: the next night showed rampant `sleep prevented by mds,
+    backupd and powerd` assertions.)
   - With Apple Thunderbolt Display: **still no crash**, but the TB Display
     does not come back after wake (DP-tunnel retrain failure; known bug).
     Nasty side effect: the login window renders on the dead display —
@@ -161,12 +165,10 @@ Working notes for this machine (not part of the guide itself).
            VERDICT (2026-10-22, later same night): retest CRASHED
            identically — the flag is not the mechanism. Surgery
            REVERTED (`eb540be`, CaseySJ stock table byte-exact again).
-           USER DECISION — final state of this machine: SLEEP DISABLED
-           (`sudo pmset -a sleep 0`); for manual sleep, unplug the TB
-           cable first (base system sleep without the Display passed
-           twice). (a-now) dummy-kext remains untested for anyone who
-           wants to revisit; crash #1's IOThunderboltFamily hang would
-           survive it anyway.
+           (a-now) dummy-kext remains untested for anyone who wants to
+           revisit; crash #1's IOThunderboltFamily hang would survive it
+           anyway. Final state + voided Display-less baseline: see
+           "Sleep crash — CLOSED" below.
 
            TOPOLOGY (2026-10-22 ioreg, verified): the TB Display's USB is
            NOT behind XHC3. Path: RP17 → UPSB → DSB1 → Pericom
@@ -195,8 +197,9 @@ Working notes for this machine (not part of the guide itself).
         is wake-enabled. Built-in XHC (PciRoot(0x0)/Pci(0x14,0x0)) has
         `acpi-wake-type=1` in DeviceProperties; XHC3 has no entry yet.
         4. **ADOPTED (2026-10-22) as final workaround**: `pmset sleep 0`
-           (no idle sleep); manual sleep only after unplugging the TB
-           cable (Display-less sleep verified clean).
+           — and ONLY that: the "unplug the TB cable before manual
+           sleep" variant was tried and FAILED (Display-less sleep is
+           not clean after all — see "Sleep crash — CLOSED").
   - [x] `UEFI → Drivers`: TbtForcePower.efi enabled (2fdc305) then
         DISABLED again same evening — see ladder step 1 (failed + suspect
         for TB-USB regression).
@@ -254,6 +257,42 @@ Working notes for this machine (not part of the guide itself).
   always be updated/removed together, and the legacy `UTBDefault.kext`
   from the release zip must NOT be added (it is the no-map fallback).
 
+## Sleep crash — CLOSED (2026-10-22): disable sleep, full stop
+
+- **Final fact: unplugging the Thunderbolt Display does NOT make sleep
+  safe.** Retest with the Display disconnected still froze/crashed a few
+  seconds after wake. Trigger = the ThunderboltEX3 card itself riding
+  Apple's native TB stack through sleep/wake power transitions — not the
+  Display, not its peripherals, not USB bookkeeping. The 2026-10-21
+  "base system sleeps/wakes cleanly without Display" baseline is VOID —
+  it did not reproduce (heavy sleep-assertion noise the following nights,
+  `sleep prevented by mds, backupd and powerd`, suggests those early
+  "clean" cycles may never have truly entered sleep).
+- **Final state of this machine: `sudo pmset -a sleep 0`** — no idle
+  sleep and no manual sleep (the cable-unplug variant is RETRACTED).
+  Display sleep is unaffected and safe. All countermeasure testing
+  stopped here.
+- Evidence trail (repo root): `deathlog.txt` (wake-time 180 s topology
+  scan timeout, IOThunderboltFamily), `deathlog2.txt` (NHISpeedTest
+  over-release during wake teardown ~6 s post-wake), plus the `ioreg`
+  and `pcidebug` captures. Full run-up lives in the countermeasure
+  ladder + TOPOLOGY notes in the To-do section above; the README's
+  former "Sleep crash debugging notes" section survives in git history
+  (≤ `704ced4`).
+- Settings kept permanently (Dortania sleep prep applied during testing,
+  https://github.com/dortania/OpenCore-Post-Install/universal/sleep.md):
+  `sudo pmset -a hibernatemode 0 autopoweroff 0 standby 0 powernap 0
+  proximitywake 0 tcpkeepalive 0 womp 0`, locked-empty `/var/vm/sleepimage`
+  (`sudo chflags uchg`), and `swd_panic=1` in boot-args — that is what
+  produced the panic logs. Wake outcomes are visible with
+  `pmset -g log | grep -E 'Sleep|Wake|Failure'`.
+- Only untested lever if anyone revisits: dummy-injecting an empty kext
+  with bundle-id `com.apple.driver.AppleThunderboltNHISpeedTest`
+  (shadowing the system one under the existing amfi=0x80 + partial-SIP
+  state) to delete crash #2's teardown path — but the Display-less crash
+  says the instability is bigger than that one kext, and crash #1's hang
+  inside IOThunderboltFamily would remain anyway.
+
 ## If macOS Tahoe (26) ever becomes interesting
 
 Per Dortania's Tahoe notes, current setup breaks in two places:
@@ -300,9 +339,10 @@ Per Dortania's Tahoe notes, current setup breaks in two places:
       HS13/14 = USB2 rear, others USB3) → confirms the
       `AppleUSBHostMergeProperties` map applies; pair a Bluetooth device.
 - [ ] Wi-Fi connects; analog + HDMI audio work; Ethernet works.
-- [x] Sleep test per README: **base system sleeps/wakes cleanly** (2026-10-21,
-      no `.panic`). Remaining failure is TB Display wake only — see the
-      sleep-bug section above.
+- [x] Sleep test per README: base system sleeps/wakes cleanly
+      (2026-10-21, no `.panic`) — **VOID 2026-10-22**: later retest
+      freezes seconds after wake with the Display unplugged too; sleep
+      is now disabled outright (see "Sleep crash — CLOSED").
 
 ## Sleep crash — still-untried options (from Dortania sleep page)
 
