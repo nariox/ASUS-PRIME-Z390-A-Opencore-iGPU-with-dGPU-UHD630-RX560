@@ -1,0 +1,63 @@
+panic(cpu 4 caller 0xffffff800924c40d): A kext releasing a(n) AppleThunderboltNHISpeedTestService has corrupted the registry. @OSObject.cpp:224
+Panicked task 0xffffff9a594c1980: 298 threads: pid 0: kernel_task
+Backtrace (CPU 4), panicked thread: 0xffffff90c20a4598, Frame : Return Address
+0xffffffd1823fba50 : 0xffffff8008bd6761 mach_kernel : _handle_debugger_trap + 0x4c1
+0xffffffd1823fbaa0 : 0xffffff8008d4c846 mach_kernel : _kdp_i386_trap + 0x126
+0xffffffd1823fbae0 : 0xffffff8008d3b99c mach_kernel : _kernel_trap + 0x75c
+0xffffffd1823fbba0 : 0xffffff8008b6b971 mach_kernel : _return_from_trap + 0xc1
+0xffffffd1823fbbc0 : 0xffffff8008bd6a57 mach_kernel : _DebuggerTrapWithState + 0x67
+0xffffffd1823fbcc0 : 0xffffff8008bd60db mach_kernel : _panic_trap_to_debugger + 0x1fb
+0xffffffd1823fbd30 : 0xffffff80093d109d mach_kernel : _panic + 0x81
+0xffffffd1823fbe20 : 0xffffff800924c40d mach_kernel : __ZNK8OSObject13taggedReleaseEPKvi + 0x8d
+0xffffffd1823fbe30 : 0xffffff7f9db60681 com.apple.driver.AppleThunderboltNHISpeedTest : __ZN32AppleThunderboltNHISpeedTestPort8finalizeEj + 0x8f
+0xffffffd1823fbe50 : 0xffffff80092fa5ae mach_kernel : __ZN10IOWorkLoop9runActionEPFiP8OSObjectPvS2_S2_S2_ES1_S2_S2_S2_S2_ + 0x3e
+0xffffffd1823fbe90 : 0xffffff80092c8ac3 mach_kernel : __ZN9IOService15terminateWorkerEj + 0xb43
+0xffffffd1823fbf10 : 0xffffff80092d6137 mach_kernel : __ZN9IOService15terminateThreadEPvi + 0x107
+0xffffffd1823fbfa0 : 0xffffff8008b6b19e mach_kernel : _call_continuation + 0x2e
+      Kernel Extensions in backtrace:
+         com.apple.driver.AppleThunderboltNHISpeedTest(0.0.1)[01913634-C2A1-33D9-91A8-B6AD920E7F24]@0xffffff7f9db50000->0xffffff7f9db6afff
+            dependency: com.apple.iokit.IOPCIFamily(2.9)[CE5B2616-7BAB-3BFD-A324-FC2552373CC2]@0xffffff800b086000->0xffffff800b0bafff
+            dependency: com.apple.iokit.IOThunderboltFamily(9.3.3)[3A20556E-0772-38F3-AE71-CAACE6457073]@0xffffff800b225000->0xffffff800b38ffff
+
+Process name corresponding to current thread (0xffffff90c20a4598): kernel_task
+Boot args: keepsyms=1 debug=0x100 swd_panic=1 brcmfx-country=#a -btlfxboardid -btlfxbeta -btlfxallowanyaddr amfi=0x80 agdpmod=pikera 
+
+Mac OS version:
+24G517
+
+Kernel version:
+Darwin Kernel Version 24.6.0: Mon Jan 19 22:00:10 PST 2026; root:xnu-11417.140.69.708.3~1/RELEASE_X86_64
+Kernel UUID: A8F2DD73-2B65-3BF9-9B5A-BA2B753AA960
+roots installed: 0
+KernelCache slide: 0x0000000008800000
+KernelCache base:  0xffffff8008a00000
+Kernel slide:      0x00000000088e8000
+Kernel text base:  0xffffff8008ae8000
+__HIB  text base: 0xffffff8008900000
+System model name: iMac19,2 (Mac-63001698E7A34814)
+System shutdown begun: NO
+Panic diags file available: YES (0x0)
+Hibernation exit count: 0
+
+System uptime in nanoseconds: 1802968523104
+Last Sleep:           absolute           base_tsc          base_nano
+  Uptime  : 0x000001a3c94c63fa
+  Sleep   : 0x0000019e415c138d 0x00000024bb46181c 0x0000000000000000
+  Wake    : 0x000001a04417bb54 0x000000057372d4fe 0x0000019e58b8eda2
+Compressor Info: 0% of compressed pages limit (OK) and 0% of segments limit (OK) with 0 swapfiles and OK swap space
+Zone info:
+  Zone map: 0xffffff80be192000 - 0xffffffa0be192000
+  . PGZ   : 0xffffff80be192000 - 0xffffff80c6193000
+  . VM    : 0xffffff80c6193000 - 0xffffff8591b2b000
+  . RO    : 0xffffff8591b2b000 - 0xffffff872ae68000
+  . GEN0  : 0xffffff872ae68000 - 0xffffff8bf6800000
+  . GEN1  : 0xffffff8bf6800000 - 0xffffff90c2199000
+  . GEN2  : 0xffffff90c2199000 - 0xffffff958db32000
+  . GEN3  : 0xffffff958db32000 - 0xffffff9a594cb000
+  . DATA  : 0xffffff9a594cb000 - 0xffffffa0be192000
+  Metadata: 0xffffff808e182000 - 0xffffff80ae182000
+  Bitmaps : 0xffffff80ae182000 - 0xffffff80ba182000
+  Extra   : 0 - 0
+
+
+

@@ -128,6 +128,36 @@ Working notes for this machine (not part of the guide itself).
            (a) `_STA=0` on XHC3 via decompiled+recompiled SSDT,
            (b) `power-save` flag in ThunderboltConfig (same decompile),
            (c) BIOS GPIO-force-power, (d) `pmset sleep 0`.
+           UPDATE 2 (2026-10-22, deathlog #2 = `deathlog2.txt`): the
+           zero-port retest CRASHED AGAIN — but with a NEW signature:
+           `A kext releasing a(n) AppleThunderboltNHISpeedTestService
+           has corrupted the registry` in
+           `AppleThunderboltNHISpeedTestPort::finalize` inside
+           `IOService::terminateWorker`, ~6 s after waking from an 18 s
+           sleep. XHC3 appears nowhere => teardown/teardown-churn in
+           Apple's NHI sub-service stack is the unstable layer, in both
+           directions (#1 wake-scan hang, #2 wake-teardown over-release).
+           => lever (b) `power-save` APPLIED same day (see below).
+           Revised remaining ladder:
+           (a-now) dummy-inject `AppleThunderboltNHISpeedTest` (empty
+                kext with same bundle-id, shadows the system one —
+                viable under our amfi=0x80 + SIP-partial-disabled state)
+                to delete the crashing code path; also A/B the utopia
+                firmware vs stock and its issue tracker;
+           (b-now) `_STA=0` on XHC3 = LOW value now (XHC3 exonerated);
+           (c) BIOS GPIO-force-power if exposed, (d) `pmset sleep 0`.
+           POWER-SAVE SURGERY (APPLIED 2026-10-22, commit 3791300):
+           SSDT-TB3-RP17.aml decompiled with `iasl -d`, `"power-save"`
+           flipped `One`->`Zero` in NHI0 `_DSM` ThunderboltConfig
+           package, recompiled (same size 2021 B; only other byte =
+           OEMID marker i->j that iasl re-stamps, inert). macOS now
+           should never deep-power the EX3 at runtime; sleep/wake
+           transitions lose the deepest link state. Verdict markers
+           for the 2-minute sleep loop: no new panic file + no
+           `RP17(AppleThunderboltHAL XHC3)` Failure line in
+           `pmset -g log` = fixed; same-signature panic = power-save
+           was not the mechanism (go (a-now)); NEW NHI-stack panic =
+           confirm (a-now) urgently.
 
            TOPOLOGY (2026-10-22 ioreg, verified): the TB Display's USB is
            NOT behind XHC3. Path: RP17 → UPSB → DSB1 → Pericom

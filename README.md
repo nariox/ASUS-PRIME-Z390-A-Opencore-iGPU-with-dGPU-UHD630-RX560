@@ -126,6 +126,16 @@ Dortania's sleep guide (https://github.com/dortania/OpenCore-Post-Install
   panics. The "silent reboot" was a 3-minute hang all along, and the hang is
   inside the TB wake path itself, exactly what the `RP17(AppleThunderboltHAL
   XHC3)` pmset line had been pointing at.
+  **CRASH #2 (`deathlog2.txt`, same night, after the USB remap):** a
+  DIFFERENT signature — `A kext releasing a(n) AppleThunderboltNHISpeedTestService
+  has corrupted the registry` (`AppleThunderboltNHISpeedTestPort::finalize`
+  inside `IOService::terminateWorker`), ~6 s after waking from an 18 s
+  sleep; XHC3 appears nowhere. Two distinct crashes in Apple's own
+  Thunderbolt stack — a hang in the wake direction, an over-release crash
+  in the other — put the blame on the stack itself with the utopia-team
+  firmware, not on USB bookkeeping. Hence the `power-save` SSDT surgery
+  (experiment 2, applied) and, if that fails, dummy-injecting
+  `AppleThunderboltNHISpeedTest` to delete the crashing code path.
 - Before testing, match Dortania's prep (disables hibernation/Power Nap and
   the network/wake timers that mask sleep bugs; the sleepimage lock
   prevents a hibernation image from ever being written mid-test):
@@ -151,19 +161,24 @@ Dortania's sleep guide (https://github.com/dortania/OpenCore-Post-Install
   fix: https://osy.gitbook.io/hac-mini-guide/details/thunderbolt-3-fix/ ,
   ThunderboltReset) or disabling TB during install/debug.
 - Useful experiments, in order of effort:
-  1. **done, pending re-test**: full USB remap with USBToolBox from a Windows
-     Live USB, with the Thunderbolt Display plugged in so the XHC3 (EX3)
-     ports are mapped too (`UTBMap.kext`: 15 XHC ports + 4 XHC3 ports). The
-     map format needs the `USBToolBox.kext` loader — install both together
-     (`XhciPortLimit` is NOT needed with the finished map and is back to
-     `false`). Hypothesis under test: XHC3 enumerating with no USB
-     personality confused macOS during wake — verdict = whether the
-     `RP17(AppleThunderboltHAL XHC3)` failure line survives a mapped XHC3;
-  2. SSDT surgery on `SSDT-TB3-RP17.aml`: clear the `power-save` flag in
-     its `ThunderboltConfig` so macOS never deep-powers the controller
-     (no source needed — `iasl -d` decompiles the compiled .aml we hold
-     and it recompiles losslessly; the old "need CaseySJ's .dsl" note
-     was wrong);
+  1. **done — hypothesis FALSE**: full USB remap with USBToolBox from a
+     Windows Live USB, with the Thunderbolt Display plugged in so the
+     XHC3 (EX3) ports are mapped too (`UTBMap.kext`: 15 XHC ports + 4
+     XHC3 ports; the map format needs the `USBToolBox.kext` loader —
+     install both together; `XhciPortLimit` is NOT needed with the
+     finished map and is back to `false`). The mapped/zeroed XHC3 did
+     not save wake: crash #2 came ~6 s after wake with `AppleThunderbolt-
+     NHISpeedTest` over-releasing an object during service teardown —
+     XHC3 appears nowhere in it. USB was never the mechanism; the
+     unstable layer is Apple's native TB stack on the EX3 itself;
+  2. **APPLIED 2026-10-22, pending re-test** (after crash #2 — see
+     `deathlog2.txt`): SSDT surgery on `SSDT-TB3-RP17.aml` — the
+     `power-save` flag in NHI0's `ThunderboltConfig` cleared
+     (`One` -> `Zero`) so macOS never deep-powers the EX3 at runtime;
+     done in-house: `iasl -d` decompiles the compiled .aml losslessly and
+     it recompiles at the same size (the old "need CaseySJ's .dsl" note
+     was wrong; the only side effect is iasl re-stamping the reserved
+     OEMID marker `iCASEY`->`jCASEY`, which nothing references);
   3. **APPLIED 2026-10-22, effect corrected by ioreg**: DeviceProperties
      `class-code ff ff ff ff` on
      `PciRoot(0x0)/Pci(0x1B,0x0)/Pci(0x0,0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)`
