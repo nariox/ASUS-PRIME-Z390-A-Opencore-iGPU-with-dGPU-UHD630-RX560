@@ -25,7 +25,9 @@ Working notes for this machine (not part of the guide itself).
   with GenSMBIOS (platform `iMac19,2`), put all four values in
   `OC/LocalSettings.txt`, run `sh OC/applyserialnums.sh`.
   Note: `USBMap.kext` is keyed to `iMac19,2-XHC` — keep that model.
-- [ ] **OpenCore 1.0.7 → 1.0.8** (decided to postpone; do soon).
+- [ ] **OpenCore 1.0.7 → 1.0.8** (postponed; verified 2026-10-21: 1.0.8
+  has NO USB/XhciPortLimit changes — nothing relevant to us; revisit at
+  1.0.9+ or when doing kext updates).
 - [ ] Kext updates when upgrading: WhateverGreen 1.7.1, VirtualSMC 1.3.8,
   AppleALC 1.9.8, AirportBrcmFixup 2.2.1.
 - [ ] **Sleep bug — status 2026-10-21 (controlled tests)**:
