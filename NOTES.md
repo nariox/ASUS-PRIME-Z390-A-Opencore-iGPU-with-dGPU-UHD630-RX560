@@ -88,16 +88,36 @@ Working notes for this machine (not part of the guide itself).
              `pcidebug 21:0:2` (Windows numbering); macOS renumbers
              PCIe buses, so if ioreg shows no UTB match on XHC3, fix
              the pcidebug key to macOS' numbering.
-        2. (HELD — decision 2026-10-21) Hide XHC3 from macOS
-           (DeviceProperties class-code mask ffffffff on
+             RESULT (2026-10-22, commit 81f6baf "New USB working"):
+             loader fixed the boot; user renamed the XHC3 personality to
+             `XHC3` with 0 ports / `port-count 0`, re-saved the template
+             (tabs, ProperTree — semantically verified identical), and
+             added a DISABLED `UTBDefault.kext` entry (file intentionally
+             not in the repo — OpenCore only requires files for enabled
+             entries; it is the emergency no-map fallback switch). The
+             zero-port map alone does not disable the XHC3 controller for
+             PM purposes — superseded by ladder step 2 (class-code hide,
+             applied same day).
+        2. **APPLIED 2026-10-22** — Hide XHC3 from macOS (DeviceProperties
+           class-code mask ffffffff on
            `PciRoot(0x0)/Pci(0x1B,0x0)/Pci(0x0,0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)`
-           — verified from ioreg, `pcidebug 11:0:0`) — TB video survives;
-           the Display's USB/camera behind XHC3 stop working always.
-           NOTE: AppleThunderboltHAL stays visible either way (hiding it
-           would kill the TB Display's DP tunnel) — if the hang is HAL's
-           alone, next lever is the `power-save` flag in ThunderboltConfig
-           of SSDT-TB3-RP17.aml (needs CaseySJ's source .dsl from the
-           tonymacx86 EX3 thread; we only hold the compiled .aml).
+           — verified from ioreg, `pcidebug 11:0:0`). Formerly HELD
+           because it would kill "the Display's USB behind XHC3" —
+           user fact-check 2026-10-22 voids that: XHC3 is the USB port
+           on the EX3 card itself, dead under the utopia-team firmware
+           regardless, and the TB Display's USB devices enumerate through
+           another path. Hide costs nothing. NOTE: zeroing the map ports
+           is NOT sufficient — that leaves the controller probed and in
+           the wake PM set; only the class-code hide removes it.
+           AppleThunderboltHAL stays visible either way (hiding it
+           would kill the TB Display's DP tunnel) — and since the panic
+           backtrace hangs in the TB family's own startScan, if the
+           hide alone doesn't stop the wake panic, next lever is the
+           `power-save` flag in ThunderboltConfig of SSDT-TB3-RP17.aml
+           (needs CaseySJ's source .dsl from the tonymacx86 EX3 thread;
+           we only hold the compiled .aml). If EX3 firmware ever returns
+           to stock, delete the DeviceProperties entry to get the
+           card's USB port back.
         3. BIOS GPIO-force-power option IF exposed (Gigabyte calls it
            "GPIO3 Force PWR"; ASUS PRIME Z390-A may not expose anything
            similar) — keeps card powered through sleep at platform level.
