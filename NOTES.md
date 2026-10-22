@@ -59,13 +59,17 @@ Working notes for this machine (not part of the guide itself).
            warned: boot-time power only, "sleep/wake support... strictly
            out of scope". To confirm causality of the USB regression:
            boot without the driver -> TB USB should enumerate again.
-        2. If the same Failure line survives: hide XHC3 from macOS
-           (DeviceProperties class-code mask ffffffff on its PCIe path) —
-           TB video survives; the Display's USB/camera behind XHC3 are
-           already broken by this bug anyway. Needs the exact path:
-           `ioreg -n XHC3 -l | grep -E '"acpi-path"|"pcidebug"'`
-           (acpi-path names the ACPI device, pcidebug gives the
-           PciRoot(...)/Pci(...) path to key DeviceProperties on).
+        1.5 NEW EXPERIMENT (in progress, user's call): `XhciPortLimit`
+            enabled (Kernel→Quirks) + full remap via USBToolBox from a
+            Windows Live USB with the TB Display PLUGGED IN, so XHC3's
+            ports get an actual USB personality. Hypothesis: XHC3 was
+            enumerating unmapped and confusing macOS on wake. XHC3
+            class-code hide = HELD until this resolves.
+        2. (HELD — decision 2026-10-21) Hide XHC3 from macOS
+           (DeviceProperties class-code mask ffffffff on
+           `PciRoot(0x0)/Pci(0x1B,0x0)/Pci(0x0,0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)`
+           — verified from ioreg, `pcidebug 11:0:0`) — TB video survives;
+           the Display's USB/camera behind XHC3 stop working always.
            NOTE: AppleThunderboltHAL stays visible either way (hiding it
            would kill the TB Display's DP tunnel) — if the hang is HAL's
            alone, next lever is the `power-save` flag in ThunderboltConfig
@@ -108,8 +112,12 @@ Working notes for this machine (not part of the guide itself).
   deliberately, pick the 15 ports that actually get used, and let
   USBToolBox bind the HS↔SS mux pairs (don't hand-guess them). Keep the
   personality keyed to `iMac19,2` (`iMac19,2-XHC` + `model`), or the map
-  silently stops applying. `XhciPortLimit` stays `false` (mapped; and
-  per OC docs the patch is a last resort anyway).
+  silently stops applying. UPDATE (2026-10-21): remap is starting NOW
+  from a Windows Live USB + USBToolBox, TB Display plugged in so XHC3
+  gets mapped too; `XhciPortLimit` enabled meanwhile (experiment step
+  1.5). After remap: replace `USBMap.kext` with the USBToolBox output
+  (and its config entry), then decide whether `XhciPortLimit` goes back
+  to `false`.
 
 ## If macOS Tahoe (26) ever becomes interesting
 

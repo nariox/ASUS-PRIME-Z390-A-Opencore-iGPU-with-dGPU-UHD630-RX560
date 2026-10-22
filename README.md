@@ -142,17 +142,23 @@ Dortania's sleep guide (https://github.com/dortania/OpenCore-Post-Install
   fix: https://osy.gitbook.io/hac-mini-guide/details/thunderbolt-3-fix/ ,
   ThunderboltReset) or disabling TB during install/debug.
 - Useful experiments, in order of effort:
-  1. hide XHC3 from macOS via DeviceProperties (`class-code ff ff ff ff`
-     on
-     `PciRoot(0x0)/Pci(0x1B,0x0)/Pci(0x0,0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)`
-     — verified from ioreg `pcidebug 11:0:0`): removes XHC3 from the
-     failing wake set. TB video keeps working; the Display's USB hub /
-     camera / audio stop working **always**, not just after sleep;
+  1. **in progress**: full USB remap with USBToolBox from a Windows Live
+     USB, with the Thunderbolt Display plugged in so the XHC3 (EX3)
+     ports are enumerated and mapped too; `XhciPortLimit` enabled for
+     the experiment. Hypothesis: XHC3 enumerates with no USB
+     personality at all and confuses macOS during wake;
   2. SSDT surgery on `SSDT-TB3-RP17.aml`: clear the `power-save` flag in
      its `ThunderboltConfig` so macOS never deep-powers the controller
      (needs CaseySJ's source .dsl from the tonymacx86 EX3 thread — we
      only hold the compiled .aml);
-  3. if the panic backtrace implicates the iGPU power states, try
+  3. hide XHC3 from macOS via DeviceProperties (`class-code ff ff ff ff`
+     on
+     `PciRoot(0x0)/Pci(0x1B,0x0)/Pci(0x0,0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)`
+     — verified from ioreg `pcidebug 11:0:0`): removes XHC3 from the
+     failing wake set, but the Display's USB hub / camera / audio stop
+     working **always**, not just after sleep — HELD in reserve until
+     the remap experiment resolves;
+  4. if the panic backtrace implicates the iGPU power states, try
      `forceRenderStandby=0` in boot-args (CFL iGPU RC6 quirk from the
      Dortania sleep page).
 
