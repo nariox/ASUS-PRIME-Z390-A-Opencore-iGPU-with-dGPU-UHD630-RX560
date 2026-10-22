@@ -51,16 +51,14 @@ Working notes for this machine (not part of the guide itself).
         controller power-state transition on wake. `AMDRadeonAccelerator
         transaction ... 0xe00002d7` (kIOReturnNotReady) after wake =
         bystander. Countermeasure ladder:
-        1. TbtForcePower.efi — enabled 2026-10-21 (commit 2fdc305).
-           CONFIRMED by user: the crashing boot did NOT have the driver
-           active — the crash predates it and does not invalidate it.
-           CAVEAT (upstream FAQ, al3xtjames/ThunderboltPkg): the driver's
-           ONLY function is powering the controller on AT BOOT via the
-           chipset GPIO from TBT_INFO_HOB; "sleep/wake support,
-           hotplugging, or any other features are strictly out of scope".
-           So expectation for the wake-hang: LOW — test it anyway (free),
-           but do not trust a green result either way. (EX3 is a discrete
-           card; the chipset force-power GPIO may not even govern it.)
+        1. TbtForcePower.efi — TESTED 2026-10-21 evening, FAILED:
+           wake hang unchanged (same crash signature, "display doesn't
+           work, full system crash soon afterwards") AND the user's TB
+           USB devices stopped loading entirely with it enabled.
+           Driver disabled again (kept on disk). Upstream FAQ had already
+           warned: boot-time power only, "sleep/wake support... strictly
+           out of scope". To confirm causality of the USB regression:
+           boot without the driver -> TB USB should enumerate again.
         2. If the same Failure line survives: hide XHC3 from macOS
            (DeviceProperties class-code mask ffffffff on its PCIe path) —
            TB video survives; the Display's USB/camera behind XHC3 are
@@ -86,9 +84,9 @@ Working notes for this machine (not part of the guide itself).
         `acpi-wake-type=1` in DeviceProperties; XHC3 has no entry yet.
         4. Practical fallback: `pmset sleep 0` (never idle-sleep; manual
            sleep only if it proves safe).
-  - [x] `UEFI → Drivers`: **TbtForcePower.efi enabled** (see ladder
-        caveat: boot-power only). TEST NEXT: sleep cycles with TB
-        Display attached.
+  - [x] `UEFI → Drivers`: TbtForcePower.efi enabled (2fdc305) then
+        DISABLED again same evening — see ladder step 1 (failed + suspect
+        for TB-USB regression).
         (`IOElectrify.kext` stays removed — superseded by Apple's native
         Thunderbolt stack since Big Sur.)
   - [ ] Dortania's two TB links are now assessed and exhausted:
@@ -100,14 +98,18 @@ Working notes for this machine (not part of the guide itself).
         `power-save` flag — ladder above) or disable TB.
   - [ ] Grab the `*.panic` from `/Library/Logs/DiagnosticReports/` after
         any crash (none produced so far — none needed).
-- [ ] **USB: full remap (do AFTER sleep debugging).** The 15-port limit is
-  gone since macOS 11, so all ports can be mapped without risk. Current
-  `USBMap.kext` simply omits HS03–06/HS11 (+ SS pairs) — those rear ports
-  likely already work, just undescribed (may misreport speed). Don't
-  hand-guess HS↔SS mux pairings: re-map every port with **USBToolBox**
-  (plug a stick into each one) and keep the personality keyed to
-  `iMac19,2` (`iMac19,2-XHC` + `model`), or the map silently stops
-  applying.
+- [ ] **USB: full remap (do AFTER sleep debugging).** CORRECTION
+  (2026-10-21, verified against OC 1.0.7 Configuration.pdf): the 15-port
+  limit is NOT gone — it is enforced per controller via the locationID
+  bit format, "the only valid solution is to limit the amount of used
+  ports to 15". Current `USBMap.kext` enables exactly 15 ports
+  (HS01/02/07–10/12–14 + SS01/02/07–10) — a full remap must therefore
+  spend a 15-port budget: drop HS03–06/HS11 or their SS partners
+  deliberately, pick the 15 ports that actually get used, and let
+  USBToolBox bind the HS↔SS mux pairs (don't hand-guess them). Keep the
+  personality keyed to `iMac19,2` (`iMac19,2-XHC` + `model`), or the map
+  silently stops applying. `XhciPortLimit` stays `false` (mapped; and
+  per OC docs the patch is a last resort anyway).
 
 ## If macOS Tahoe (26) ever becomes interesting
 

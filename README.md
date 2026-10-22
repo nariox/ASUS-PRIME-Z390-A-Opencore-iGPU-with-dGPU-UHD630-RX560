@@ -40,9 +40,10 @@ entries needed only by older macOS versions have been removed.
   itself once with the Display attached and `pmset -g log` caught it:
   `Failure during wake: RP17(AppleThunderboltHAL XHC3) : Some drivers
   failed to handle setPowerState` — a hard hang in the ThunderboltEX3
-  wake path. `TbtForcePower.efi` is enabled (note: upstream says it only
-  forces power-on at boot; sleep/wake is out of its scope) — see the
-  debugging notes below for the current experiment queue.
+  wake path. `TbtForcePower.efi` was tried and reverted (it only forces
+  power-on at boot; and with it enabled the Display's USB devices stopped
+  enumerating) — see the debugging notes below for the current experiment
+  queue.
 
 ### Not tested
 - FileVault
@@ -127,23 +128,30 @@ Dortania's sleep guide (https://github.com/dortania/OpenCore-Post-Install
   on some setups and blocks all sleep). Sleep manually (Apple menu) or
   with `pmset sleepnow`; `pmset -g log | grep -E 'Sleep|Wake|Denied'`
   shows each attempt and its outcome.
-- The historical "15-port USB limit" no longer applies on macOS 11+
-  (`XhciPortLimit` does nothing on Sequoia), so the extra USB ports added
-  by a Thunderbolt display are **unlikely** to be the crash cause.
-  Wake-path / USB power-state issues with the Thunderbolt controller are
-  the more likely suspect. Dortania is blunt about Thunderbolt: working TB
+- The "15-port USB limit" is real on Sequoia (contrary to earlier folklore
+  in this README): per OpenCore 1.0.7's Configuration.pdf the limit is
+  baked into the USB locationID format ("the only valid solution is to
+  limit the amount of used ports to 15") and `XhciPortLimit` is still
+  maintained. It applies **per controller**: our USBMap enables exactly 15
+  ports on the built-in XHC, while the Thunderbolt Display's hub hangs off
+  a downstream port of the separate XHC3 controller and consumes no root
+  ports — so port count is still not the crash mechanism. Wake-path /
+  USB power-state issues with the Thunderbolt controller are. Dortania
+  is blunt about Thunderbolt: working TB
   + working sleep usually means *patching TB properly* (osy's Thunderbolt 3
   fix: https://osy.gitbook.io/hac-mini-guide/details/thunderbolt-3-fix/ ,
   ThunderboltReset) or disabling TB during install/debug.
 - Useful experiments, in order of effort:
-  1. reproduce with the Display attached **now that `TbtForcePower.efi`
-     is enabled** — if the same `RP17(AppleThunderboltHAL XHC3)` Failure
-     line appears, the driver is exonerated (upstream: boot-power only);
-  2. hide XHC3 from macOS via DeviceProperties (`class-code ff ff ff ff`
-     on its PCIe path; get the path with
-     `ioreg -n XHC3 -l | grep -E '"acpi-path"|"pcidebug"'`) — TB video
-     keeps working, the Display's USB hub/camera are already broken by
-     this bug anyway;
+  1. hide XHC3 from macOS via DeviceProperties (`class-code ff ff ff ff`
+     on
+     `PciRoot(0x0)/Pci(0x1B,0x0)/Pci(0x0,0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)`
+     — verified from ioreg `pcidebug 11:0:0`): removes XHC3 from the
+     failing wake set. TB video keeps working; the Display's USB hub /
+     camera / audio stop working **always**, not just after sleep;
+  2. SSDT surgery on `SSDT-TB3-RP17.aml`: clear the `power-save` flag in
+     its `ThunderboltConfig` so macOS never deep-powers the controller
+     (needs CaseySJ's source .dsl from the tonymacx86 EX3 thread — we
+     only hold the compiled .aml);
   3. if the panic backtrace implicates the iGPU power states, try
      `forceRenderStandby=0` in boot-args (CFL iGPU RC6 quirk from the
      Dortania sleep page).
