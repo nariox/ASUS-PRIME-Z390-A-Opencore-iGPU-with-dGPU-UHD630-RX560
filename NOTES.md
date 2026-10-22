@@ -67,6 +67,27 @@ Working notes for this machine (not part of the guide itself).
             ports get an actual USB personality. Hypothesis: XHC3 was
             enumerating unmapped and confusing macOS on wake. XHC3
             class-code hide = HELD until this resolves.
+             UPDATE (2026-10-22): remap DONE (UTBMap.kext, commit
+             4b24c09) but the boot broke (NVMe "refuses to load").
+             Post-mortem: USBToolBox emitted the loader-flavour map
+             (`IOClass=USBToolBox`, `OSBundleLibraries=
+             com.dhinakg.USBToolBox.kext`) and only the map was
+             installed — without the `USBToolBox.kext` loader the map
+             can never bind and injection hits an unsatisfied
+             dependency. Loader 1.2.0 (RELEASE) added + wired before
+             UTBMap; `XhciPortLimit` back to `false` (it was only ever
+             needed for macOS-side port discovery — Windows ignores
+             it, and a final map makes it pointless; it also carries
+             Dortania's data-corruption warning, so removing it
+             de-risks the next boot). OC log of the failed boot shows
+             boot.efi reached EXITBS (volume + KC fine) — the IONVMe
+             asserts / "External Drive Case" lines are kernel-side
+             noise or fallout, not an OC problem. To verify after next
+             boot: (a) TB Display USB enumerates, (b) the XHC3
+             personality `21:0:2` actually binds — it matches on
+             `pcidebug 21:0:2` (Windows numbering); macOS renumbers
+             PCIe buses, so if ioreg shows no UTB match on XHC3, fix
+             the pcidebug key to macOS' numbering.
         2. (HELD — decision 2026-10-21) Hide XHC3 from macOS
            (DeviceProperties class-code mask ffffffff on
            `PciRoot(0x0)/Pci(0x1B,0x0)/Pci(0x0,0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)`
@@ -102,8 +123,23 @@ Working notes for this machine (not part of the guide itself).
         tools + TbtForcePower itself (FAQ: wake explicitly out of scope).
         Remaining real paths: osy TB3-fix-style surgery (XHC3 hide /
         `power-save` flag — ladder above) or disable TB.
-  - [ ] Grab the `*.panic` from `/Library/Logs/DiagnosticReports/` after
-        any crash (none produced so far — none needed).
+  - [x] **PANIC REPORT FINALLY CAUGHT (2026-10-22, saved as
+        `deathlog.txt` in this repo)**: `Wake transition timed out
+        after 180 seconds while calling power state change callbacks.
+        Suspected bundle: com.apple.iokit.IOThunderboltFamily` —
+        backtrace `IOThunderboltController::startScan ← ::wake ←
+        ::setPowerState` (IOThunderboltFamily 9.3.3, Sequoia
+        24G517). The TB controller's wake-time topology scan blocks
+        on its work-loop gate and never completes; the kernel gives
+        the driver set 180 s and then panics — i.e. the "silent
+        reboot" was actually a 3-minute hang ending in a panic that
+        `swd_panic=1` finally let us capture. Confirms the
+        `RP17(AppleThunderboltHAL XHC3)` pmset line at driver level:
+        the hang is inside Apple's TB family, not USB-family
+        bookkeeping. Countermeasure ladder unchanged; if the USB
+        remap (step 1.5) doesn't change the failure, the
+        `power-save`-flag surgery and XHC3 hide are the next levers
+        with hard evidence behind them.
 - [ ] **USB: full remap (do AFTER sleep debugging).** CORRECTION
   (2026-10-21, verified against OC 1.0.7 Configuration.pdf): the 15-port
   limit is NOT gone — it is enforced per controller via the locationID
@@ -120,6 +156,17 @@ Working notes for this machine (not part of the guide itself).
   1.5). After remap: replace `USBMap.kext` with the USBToolBox output
   (and its config entry), then decide whether `XhciPortLimit` goes back
   to `false`.
+  DONE (2026-10-22): `UTBMap.kext` (USBToolBox 1.1 map format) is the
+  live map — XHC gets 15 ports (HS01–09 + SS01–06, mux pairs implied
+  by index+0x10, `port-count 0x1a`), XHC3 gets 4 internal PRT ports;
+  `USBMap.kext` disabled (kept on disk as fallback). The
+  `iMac19,2-XHC`/`model` keying requirement is RETIRED — UTBMap
+  matches by ACPI name (`IONameMatch XHC`) + `pcidebug` property, not
+  by SMBIOS model, so the map survives SMBIOS changes. `XhciPortLimit`
+  is back to `false`. NOTE: this map format REQUIRES the
+  `USBToolBox.kext` loader (added, v1.2.0) — map and loader must
+  always be updated/removed together, and the legacy `UTBDefault.kext`
+  from the release zip must NOT be added (it is the no-map fallback).
 
 ## If macOS Tahoe (26) ever becomes interesting
 

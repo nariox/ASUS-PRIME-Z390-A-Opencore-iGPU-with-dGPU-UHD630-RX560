@@ -117,6 +117,15 @@ Dortania's sleep guide (https://github.com/dortania/OpenCore-Post-Install
   kernel panic **with a log** instead of a silent reboot. Reproduce a crash,
   then read the report in `/Library/Logs/DiagnosticReports/` (`*.panic`) —
   the faulting kext in the backtrace is the fastest way to narrow it down.
+  **CAUGHT (2026-10-22, saved as `deathlog.txt` in this repo):** `Wake
+  transition timed out after 180 seconds while calling power state change
+  callbacks. Suspected bundle: com.apple.iokit.IOThunderboltFamily`, backtrace
+  `IOThunderboltController::startScan ← ::wake ← ::setPowerState`. On wake,
+  Apple's Thunderbolt family starts its topology scan of the EX3 and the scan
+  never completes — the kernel waits 180 s on the power-state callback, then
+  panics. The "silent reboot" was a 3-minute hang all along, and the hang is
+  inside the TB wake path itself, exactly what the `RP17(AppleThunderboltHAL
+  XHC3)` pmset line had been pointing at.
 - Before testing, match Dortania's prep (disables hibernation/Power Nap and
   the network/wake timers that mask sleep bugs; the sleepimage lock
   prevents a hibernation image from ever being written mid-test):
@@ -142,11 +151,14 @@ Dortania's sleep guide (https://github.com/dortania/OpenCore-Post-Install
   fix: https://osy.gitbook.io/hac-mini-guide/details/thunderbolt-3-fix/ ,
   ThunderboltReset) or disabling TB during install/debug.
 - Useful experiments, in order of effort:
-  1. **in progress**: full USB remap with USBToolBox from a Windows Live
-     USB, with the Thunderbolt Display plugged in so the XHC3 (EX3)
-     ports are enumerated and mapped too; `XhciPortLimit` enabled for
-     the experiment. Hypothesis: XHC3 enumerates with no USB
-     personality at all and confuses macOS during wake;
+  1. **done, pending re-test**: full USB remap with USBToolBox from a Windows
+     Live USB, with the Thunderbolt Display plugged in so the XHC3 (EX3)
+     ports are mapped too (`UTBMap.kext`: 15 XHC ports + 4 XHC3 ports). The
+     map format needs the `USBToolBox.kext` loader — install both together
+     (`XhciPortLimit` is NOT needed with the finished map and is back to
+     `false`). Hypothesis under test: XHC3 enumerating with no USB
+     personality confused macOS during wake — verdict = whether the
+     `RP17(AppleThunderboltHAL XHC3)` failure line survives a mapped XHC3;
   2. SSDT surgery on `SSDT-TB3-RP17.aml`: clear the `power-save` flag in
      its `ThunderboltConfig` so macOS never deep-powers the controller
      (needs CaseySJ's source .dsl from the tonymacx86 EX3 thread — we

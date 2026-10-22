@@ -1,0 +1,67 @@
+panic(cpu 0 caller 0xffffff8006380bcd): Wake transition timed out after 180 seconds while calling power state change callbacks. Suspected bundle: com.apple.iokit.IOThunderboltFamily. Thread 0x3d49.
+Failure code:: 0x00000020 00000027
+
+Backtracing specified thread
+Panicked task 0xffffff9090595980: 295 threads: pid 0: kernel_task
+Backtrace (CPU 0), panicked thread: 0xffffff90a00f20c8, Frame : Return Address
+0xfffffff07d04b740 : 0xffffff8005d35a57 mach_kernel : _machine_switch_context + 0xd7
+0xfffffff07cf03bf0 : 0xffffff8005c079c5 mach_kernel : _thread_block_reason + 0x21d5
+0xfffffff07cf03c80 : 0xffffff8005c058e0 mach_kernel : _thread_block_reason + 0xf0
+0xfffffff07cf03cd0 : 0xffffff8005bf0741 mach_kernel : _lck_mtx_sleep + 0x61
+0xfffffff07cf03d00 : 0xffffff80062fa4e0 mach_kernel : __ZN10IOWorkLoop9sleepGateEPvj + 0x80
+0xfffffff07cf03d40 : 0xffffff80062fbb3b mach_kernel : __ZN13IOEventSource9sleepGateEPvj + 0x4b
+0xfffffff07cf03d70 : 0xffffff800822e123 com.apple.iokit.IOThunderboltFamily : __ZN23IOThunderboltController9startScanEv + 0x8f
+0xfffffff07cf03d90 : 0xffffff800822a5ba com.apple.iokit.IOThunderboltFamily : __ZN23IOThunderboltController4wakeEv + 0x1d8
+0xfffffff07cf03dc0 : 0xffffff8008229b29 com.apple.iokit.IOThunderboltFamily : __ZN23IOThunderboltController13setPowerStateEmP9IOService + 0x279
+0xfffffff07cf03e00 : 0xffffff80062de028 mach_kernel : __ZN9IOService19driverSetPowerStateEv + 0x208
+0xfffffff07cf03e70 : 0xffffff80062ddd5c mach_kernel : __ZN9IOService15pmDriverCalloutEPS_Pv + 0x9c
+0xfffffff07cf03ea0 : 0xffffff8005c35b28 mach_kernel : _thread_call_delayed_timer + 0x508
+0xfffffff07cf03ee0 : 0xffffff8005c36b78 mach_kernel : _thread_call_delayed_timer + 0x1558
+0xfffffff07cf03fa0 : 0xffffff8005b6b19e mach_kernel : _call_continuation + 0x2e
+      Kernel Extensions in backtrace:
+         com.apple.iokit.IOThunderboltFamily(9.3.3)[3A20556E-0772-38F3-AE71-CAACE6457073]@0xffffff8008225000->0xffffff800838ffff
+            dependency: com.apple.driver.AppleSMC(3.1.9)[CB4E3E0B-2583-3476-A215-30C8233D2D64]@0xffffff80073ca000->0xffffff80073e3fff
+
+Process name corresponding to current thread (0xffffff90a00f20c8): kernel_task
+Boot args: keepsyms=1 debug=0x100 swd_panic=1 brcmfx-country=#a -btlfxboardid -btlfxbeta -btlfxallowanyaddr amfi=0x80 agdpmod=pikera 
+
+Mac OS version:
+24G517
+
+Kernel version:
+Darwin Kernel Version 24.6.0: Mon Jan 19 22:00:10 PST 2026; root:xnu-11417.140.69.708.3~1/RELEASE_X86_64
+Kernel UUID: A8F2DD73-2B65-3BF9-9B5A-BA2B753AA960
+roots installed: 0
+KernelCache slide: 0x0000000005800000
+KernelCache base:  0xffffff8005a00000
+Kernel slide:      0x00000000058e8000
+Kernel text base:  0xffffff8005ae8000
+__HIB  text base: 0xffffff8005900000
+System model name: iMac19,2 (Mac-63001698E7A34814)
+System shutdown begun: NO
+Panic diags file available: YES (0x0)
+Hibernation exit count: 0
+
+System uptime in nanoseconds: 872327944864
+Last Sleep:           absolute           base_tsc          base_nano
+  Uptime  : 0x000000cb1acc1d33
+  Sleep   : 0x0000009ed9a47057 0x00000025dbf44581 0x0000000000000000
+  Wake    : 0x000000a0e7554491 0x000000057573440c 0x0000009efb30ec06
+Compressor Info: 0% of compressed pages limit (OK) and 0% of segments limit (OK) with 0 swapfiles and OK swap space
+Zone info:
+  Zone map: 0xffffff808c57c000 - 0xffffffa08c57c000
+  . PGZ   : 0xffffff808c57c000 - 0xffffff809457d000
+  . VM    : 0xffffff809457d000 - 0xffffff855ff15000
+  . RO    : 0xffffff855ff15000 - 0xffffff86f9252000
+  . GEN0  : 0xffffff86f9252000 - 0xffffff8bc4bea000
+  . GEN1  : 0xffffff8bc4bea000 - 0xffffff9090583000
+  . GEN2  : 0xffffff9090583000 - 0xffffff955bf1c000
+  . GEN3  : 0xffffff955bf1c000 - 0xffffff9a278b5000
+  . DATA  : 0xffffff9a278b5000 - 0xffffffa08c57c000
+  Metadata: 0xffffffc0acece000 - 0xffffffc0ccece000
+  Bitmaps : 0xffffffc0ccece000 - 0xffffffc0d8ece000
+  Extra   : 0 - 0
+
+
+
+
