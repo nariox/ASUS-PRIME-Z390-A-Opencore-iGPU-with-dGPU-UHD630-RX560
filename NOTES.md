@@ -158,6 +158,15 @@ Working notes for this machine (not part of the guide itself).
            `pmset -g log` = fixed; same-signature panic = power-save
            was not the mechanism (go (a-now)); NEW NHI-stack panic =
            confirm (a-now) urgently.
+           VERDICT (2026-10-22, later same night): retest CRASHED
+           identically — the flag is not the mechanism. Surgery
+           REVERTED (`eb540be`, CaseySJ stock table byte-exact again).
+           USER DECISION — final state of this machine: SLEEP DISABLED
+           (`sudo pmset -a sleep 0`); for manual sleep, unplug the TB
+           cable first (base system sleep without the Display passed
+           twice). (a-now) dummy-kext remains untested for anyone who
+           wants to revisit; crash #1's IOThunderboltFamily hang would
+           survive it anyway.
 
            TOPOLOGY (2026-10-22 ioreg, verified): the TB Display's USB is
            NOT behind XHC3. Path: RP17 → UPSB → DSB1 → Pericom
@@ -185,8 +194,9 @@ Working notes for this machine (not part of the guide itself).
         NHI0, DSB1, DSB2, XHC3 and RHUB, i.e. the whole failing subtree
         is wake-enabled. Built-in XHC (PciRoot(0x0)/Pci(0x14,0x0)) has
         `acpi-wake-type=1` in DeviceProperties; XHC3 has no entry yet.
-        4. Practical fallback: `pmset sleep 0` (never idle-sleep; manual
-           sleep only if it proves safe).
+        4. **ADOPTED (2026-10-22) as final workaround**: `pmset sleep 0`
+           (no idle sleep); manual sleep only after unplugging the TB
+           cable (Display-less sleep verified clean).
   - [x] `UEFI → Drivers`: TbtForcePower.efi enabled (2fdc305) then
         DISABLED again same evening — see ladder step 1 (failed + suspect
         for TB-USB regression).

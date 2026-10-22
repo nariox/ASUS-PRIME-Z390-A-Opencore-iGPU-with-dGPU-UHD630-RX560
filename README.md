@@ -134,8 +134,9 @@ Dortania's sleep guide (https://github.com/dortania/OpenCore-Post-Install
   Thunderbolt stack — a hang in the wake direction, an over-release crash
   in the other — put the blame on the stack itself with the utopia-team
   firmware, not on USB bookkeeping. Hence the `power-save` SSDT surgery
-  (experiment 2, applied) and, if that fails, dummy-injecting
-  `AppleThunderboltNHISpeedTest` to delete the crashing code path.
+  (experiment 2 — tested, did not help) and, as the last untested lever
+  behind it, dummy-injecting `AppleThunderboltNHISpeedTest` to delete
+  crash #2's code path.
 - Before testing, match Dortania's prep (disables hibernation/Power Nap and
   the network/wake timers that mask sleep bugs; the sleepimage lock
   prevents a hibernation image from ever being written mid-test):
@@ -147,6 +148,9 @@ Dortania's sleep guide (https://github.com/dortania/OpenCore-Post-Install
   on some setups and blocks all sleep). Sleep manually (Apple menu) or
   with `pmset sleepnow`; `pmset -g log | grep -E 'Sleep|Wake|Denied'`
   shows each attempt and its outcome.
+  *Testing concluded 2026-10-22: TB Display + sleep is not fixable on
+  this stack — the final state is sleep disabled (experiment 4 below);
+  the hibernation-off settings above are safe to keep permanently.*
 - The "15-port USB limit" is real on Sequoia (contrary to earlier folklore
   in this README): per OpenCore 1.0.7's Configuration.pdf the limit is
   baked into the USB locationID format ("the only valid solution is to
@@ -171,14 +175,16 @@ Dortania's sleep guide (https://github.com/dortania/OpenCore-Post-Install
      NHISpeedTest` over-releasing an object during service teardown —
      XHC3 appears nowhere in it. USB was never the mechanism; the
      unstable layer is Apple's native TB stack on the EX3 itself;
-  2. **APPLIED 2026-10-22, pending re-test** (after crash #2 — see
+  2. **TESTED 2026-10-22 — FAILED** (after crash #2 — see
      `deathlog2.txt`): SSDT surgery on `SSDT-TB3-RP17.aml` — the
      `power-save` flag in NHI0's `ThunderboltConfig` cleared
      (`One` -> `Zero`) so macOS never deep-powers the EX3 at runtime;
      done in-house: `iasl -d` decompiles the compiled .aml losslessly and
      it recompiles at the same size (the old "need CaseySJ's .dsl" note
      was wrong; the only side effect is iasl re-stamping the reserved
-     OEMID marker `iCASEY`->`jCASEY`, which nothing references);
+     OEMID marker `iCASEY`->`jCASEY`, which nothing references).
+     RETEST: wake crash unchanged — the flag is not the mechanism.
+     **Reverted** (`eb540be`, stock table restored byte-exact);
   3. **APPLIED 2026-10-22, effect corrected by ioreg**: DeviceProperties
      `class-code ff ff ff ff` on
      `PciRoot(0x0)/Pci(0x1B,0x0)/Pci(0x0,0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)`
@@ -193,9 +199,18 @@ Dortania's sleep guide (https://github.com/dortania/OpenCore-Post-Install
      no root ports, minimal wake work. If the sleep re-test still fails,
      real removal = patch XHC3 `_STA` to return 0 in the decompiled
      `SSDT-TB3-RP17`;
-  4. if the panic backtrace implicates the iGPU power states, try
-     `forceRenderStandby=0` in boot-args (CFL iGPU RC6 quirk from the
-     Dortania sleep page).
+  4. **ADOPTED (2026-10-22) — final workaround**: `sudo pmset -a sleep 0`
+     (no idle sleep) and, for manual sleep, either skip it or **unplug
+     the Thunderbolt cable first** — the base system slept and woke
+     cleanly twice in earlier tests with no Display attached, so the
+     crash really is Display+EX3-specific. (The old step-4 candidate,
+     `forceRenderStandby=0`, never applied: no panic ever implicated
+     the iGPU.);
+  5. if anyone revisits: the one lever left untested is dummy-injecting
+     an empty kext with bundle-id `com.apple.driver.AppleThunderbolt-
+     NHISpeedTest` (shadowing the system one under our existing
+     amfi=0x80 + partial-SIP state) to delete crash #2's code path —
+     crash #1's hang inside IOThunderboltFamily would remain, though.
 
 ## Misc
 If you need other detailed settings for this ASUS PRIME Z390-A board
